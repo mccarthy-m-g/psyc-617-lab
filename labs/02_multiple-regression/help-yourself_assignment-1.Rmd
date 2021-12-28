@@ -1,0 +1,488 @@
+---
+title: "Help yourself: Assignment 1"
+author:
+  - name: "Michael McCarthy"
+    url: https://github.com/mccarthy-m-g
+    affiliation: "PSYC 617 Lab"
+    affiliation_url: https://github.com/mccarthy-m-g/psyc-617-lab
+repository_url: https://github.com/mccarthy-m-g/psyc-617-lab
+output:
+  distill::distill_article:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = "#>", collapse = TRUE)
+```
+
+## Prerequisites
+
+To access the datasets, help pages, and functions that we will use in this *help yourself*, load the following packages:
+
+```{r prerequisites}
+here::i_am("labs/02_multiple-regression/help-yourself_assignment-1.Rmd")
+
+library(here)
+library(tidyverse)
+library(broom)
+library(performance)
+library(ppcor)
+library(ggpubr)
+```
+
+If you run this code and get the error message "there is no package called 'tidyverse'" (or a different package name), you will need to first install it, then run `library()` once again.
+
+```{r, eval=FALSE}
+#install.packages("tidyverse")
+#library(tidyverse)
+```
+
+You only need to install a package once, but you need to reload it with the `library()` function every time you start a new session.
+
+If you need to be explicit about where a function (or dataset) comes from, you can use the special form `package::function()`. For example, `ggplot2::ggplot()` tells R explicitly that you are using the `ggplot()` function from the **ggplot2** package.
+
+Telling R explicitly where a function comes from is called *namespacing*. The code below will always be explicit about where functions from loaded packages come from so that it is easier for you to help yourself when you want to learn more about a given function. However, you do not need to namespace functions in your code for assignments so long as you have the prerequisite packages loaded in your session.
+
+```{r}
+maths <- readr::read_csv(here::here("data", "help-yourself_a1.csv"))
+```
+
+## Regression
+
+Linear models such as linear regression all use the same `lm()` function (`?lm`) in R. We use R's formula syntax (`?formula`) to specify different types of linear models.
+
+### Simple Linear Regression
+
+Simple linear regression involves a response variable and a single predictor variable. The formula syntax for this model places the response variable column to the left of the tilde and the predictor variable column to the right. We then specify the data frame those columns belong to using the `data` argument.
+
+```{r}
+maths_model_simple <- lm(achieve ~ math_interest, data = maths)
+```
+
+Once you have fit the model to your data you can use the `summary()` function (`?summary.lm`) to get summary statistics of the fitted model.
+
+```{r}
+summary(maths_model_simple)
+```
+
+Alternatively, you can use the **broom** package to return these summary statistics in a data frame. This is useful if you need to access them programmatically (e.g., to create an APA table). The `tidy()` function (`?broom::tidy.lm`) summarizes the predictor estimates for your model. The `conf.int` argument can be used to get confidence intervals for the regression coefficient estimates.
+
+```{r}
+broom::tidy(maths_model_simple, conf.int = TRUE)
+```
+
+The `glance()` function (`?broom::glance.lm`) summarizes goodness of fit measures, p-values for hypothesis tests on residuals, or model convergence information.
+
+```{r}
+broom::glance(maths_model_simple)
+```
+
+The `augment()` function (`?broom::augment.lm`) can be used to add information about each observation in your data based on your fitted model. Most commonly, this includes predicted values, residuals, and standard errors for the fitted values. This can be useful for diagnosing potential problems with your model, amongst other things.
+
+```{r}
+broom::augment(maths_model_simple)
+```
+
+### Multiple Linear Regression
+
+Multiple linear regression involves a response variable and two or more predictor variables. We include more predictor variables by adding them into the model formula using the `+` symbol.
+
+```{r}
+maths_model_multiple <- lm(achieve ~ math_interest + math_anxiety, data = maths)
+```
+
+We can inspect the fitted model using the same methods as we did for the simple linear regressions. These are general functions that work for most of statistical tests and models available in R.
+
+### Assumptions and Diagnostics
+
+You have to fit your regression model before you can check whether assumptions are met. The main reason for this is that the fitted and residual values from the model are needed for assumption tests and diagnostics. We'll perform our diagnostics on the multiple linear regression model below, since it has some extra assumptions compared to simple linear regression.
+
+#### Collinearity
+
+You can check for correlations between predictors using the `correlation()` function (`?correlation::correlation`) from the **correlation** package. You provide it with your data, the variables that should be selected for correlation, the correlation method, and whether and how you want significance tests for correlations to use adjusted p-values.
+
+```{r}
+# Check for predictors that correlate highly
+maths_corr <- correlation::correlation(
+  data = maths,
+  select = c(
+    "math_interest",
+    "math_anxiety"
+  ),
+  method = "pearson",
+  p_adjust = "none" # You can decide on your own if you need to adjust these
+)
+
+# Printing the saved object will return a table
+maths_corr
+
+# Using summary() will return a correlation matrix
+summary(maths_corr)
+```
+
+The variance inflation factor (VIF) and tolerance of your model can be checked using the `check_collinearity()` function (`?performance::check_collinearity`) from the **performance** package. It takes your fitted model as its input.
+
+```{r}
+# Check Variance Inflation Factor and the tolerance statistic
+performance::check_collinearity(maths_model_multiple)
+```
+
+#### Heteroscedasticity
+
+You can check for heteroscedasticity using the `check_heteroscedasticity()` function (`?performance::check_heteroscedasticity`) from the performance package. It takes your fitted model as its input. This function has a `plot()` method so you can easily check for heteroscedasticity visually.
+
+```{r}
+maths_heteroscedasticity <- performance::check_heteroscedasticity(maths_model_multiple)
+
+plot(maths_heteroscedasticity)
+```
+
+TODO: add function for test statistic
+
+#### Normality of Residuals
+
+You can check for normality of residuals using the `check_normality()` function (`?performance::check_normality`) from the performance package. It takes your fitted model as its input. The `plot()` method can be used to return density, QQ, or PP plots.
+
+```{r}
+maths_normality <- performance::check_normality(maths_model_multiple)
+
+plot(
+  maths_normality,
+  type = "density" # One of "density", "qq", "pp"
+)
+```
+
+#### Linearity
+
+You can check for linearity by inspecting a plot of Residuals vs Fitted. The plot you made when checking for heteroscedasticity serves this function. If you did want to make a separate plot you can use the `augment()` function from the broom package to get your fitted and residual values, then plot it using the `ggscatter()` function (`?ggpubr::ggscatter`) from the **ggpubr** package. If you need or want to build a custom diagnostic plot then this approach is useful.
+
+```{r}
+ggpubr::ggscatter(
+  broom::augment(maths_model_multiple),
+  x = ".fitted",
+  y = ".resid"
+)
+```
+
+#### Outliers and Leverage
+
+You can check for univariate and multivariate outliers  using the `check_outliers()` function (`?performance::check_outliers`) from the performance package. The `method` argument can be used to specify the method of outlier detection, and the `threshold` argument can be used to set the threshold value for each method. The `plot()` method can be used to check for both outliers and high leverage observations.
+
+```{r}
+maths_outliers <- performance::check_outliers(maths_model_multiple)
+
+plot(maths_outliers)
+```
+
+#### All assumptions at once
+
+You can check all the above assumptions visually with a single call by using the `check_model()` function (`?performance::check_model`) from the performance package. The `panel` argument determines whether to arrange plots as panels or to return them as single plots.
+
+```{r}
+performance::check_model(maths_model_multiple, panel = FALSE)
+```
+
+### Effect Size
+
+Standardized estimates and their confidence intervals can be obtained using the `standardize_parameters()` function (`?effectsize::standardize_parameters`) from the **effectsize** package. It takes your fitted model as its input.
+
+```{r}
+effectsize::standardize_parameters(maths_model_multiple)
+```
+
+Semipartial correlations for each predictor can be obtained using the `spcor()` function (`?ppcor::spcor`) from the **ppcor** package. It takes a data frame with the response and predictor variables from your model as input. You can use the `select()` function (`?dplyr::select`) from the **dplyr** package to tidy your data up to fit this criteria if it isn't already the way it needs to be. 
+
+If there is any missing data for any of the variables you will also need to deal with that (through removal or imputation). Here we remove all observations with missing values using the `na.omit()` function.
+
+<!-- Note: the correlation package will support semipartial correlations in the future. Keep an eye on this GitHub issue https://github.com/easystats/correlation/issues/211 -->
+
+```{r}
+maths_sr_squared <- maths %>% 
+  dplyr::select(achieve, math_interest, math_anxiety) %>% 
+  na.omit() %>% 
+  # This gives us the semipartial correlation so we will need to square it
+  # ourselves
+  ppcor::spcor() %>% 
+  # Here we're going to square it programmatically so our results are
+  # reproducible. We do this by plucking the part of the results list
+  # we want to do more computations on, tidying up the semipartial
+  # correlation matrix into a tibble, then doing our computation.
+  purrr::pluck("estimate") %>% 
+  tibble::as_tibble(rownames = "term") %>% 
+  # We want the part of the correlation matrix between the response and the
+  # predictors. May as well rename the column while we're doing this too.
+  dplyr::select(term, sr_squared = achieve) %>% 
+  # Now we get rid of the row with the response variable because it's
+  # unnecessary
+  dplyr::filter(term != "achieve") %>% 
+  # Finally the computation! There are a lot of steps here but this code could
+  # easily be turned into a function to make it simpler. I'm showing the long
+  # way to demonstrate how you might go about cleaning up the results of a
+  # function that does not have a tidy() method since this happens occasionally.
+  # This is useful because you could now easily join the result here with the
+  # tidy() output of the `maths_model_multiple`.
+  dplyr::mutate(sr_squared = sr_squared^2)
+
+maths_sr_squared
+```
+
+## APA Table
+
+We can make an APA table of our results programmatically or manually. If you want to do it programmatically you will find the `rename()`, `relocate()`, and `left_join()` functions from the dplyr package helpful, along with the usual `select()`, `filter()`, and `mutate()` functions also from the dplyr package.
+
+```{r}
+maths_model_multiple_summary <- maths_model_multiple %>% 
+  broom::tidy() %>% 
+  dplyr::rename(beta = estimate, se_beta = std.error, t = statistic, p = p.value)
+
+maths_beta_std <- maths_model_multiple %>% 
+  effectsize::standardize_parameters() %>% 
+  tibble::as_tibble() %>% 
+  dplyr::select(term = Parameter, std.beta = Std_Coefficient)
+
+maths_model_multiple_table <-
+  dplyr::left_join(maths_model_multiple_summary, maths_beta_std) %>% 
+  dplyr::relocate(std.beta, .after = beta) %>% 
+  dplyr::left_join(maths_sr_squared)
+
+# This is a basic example. You still need to round digits and clean up column
+# and predictor names for this to be APA compliant.
+maths_model_multiple_table
+```
+
+## Moderation
+
+Moderation analysis tests whether the association between a predictor variable and a response variable depends on the magnitude of a moderating variable. 
+
+### Check for redundancy between predictor and moderator
+
+You can do this using a Pearson correlation, which we demonstrated already.
+
+### Mean centre predictor and moderator
+
+Mean centring reduces multicollinearity between variables. You can easily centre variables using the `mutate()` and `across()` functions from the dplyr package. The `across()` function lets you apply some operation across multiple columns of your choosing. Its first argument specifies which columns to operate over, which you can specify using tidy selection (`?tidyr::tidyr_tidy_select`); here we choose to operate over any column whose type is numeric. Its second argument defines the operation you want to apply across columns; you start with a tilde, then write out the operation you want to do. The `.x` variable acts as a placeholder for the each column you are operating across.
+
+```{r}
+maths_centred <- maths %>% 
+  dplyr::mutate(
+    dplyr::across(where(is.numeric), ~ .x - mean(.x, na.rm = TRUE))
+  )
+```
+
+### Fit additive and interaction regression models
+
+Here you first run a multiple regression as we demonstrated above, treating the moderator variable like any other predictor.
+
+```{r}
+maths_additive <- lm(
+  achieve ~ math_interest + teacher_quality,
+  data = maths
+)
+```
+
+Then you run a multiple interaction where the predictor and moderator are allowed to interact. You can specify interactions in formulas in two ways: One, with a `*` symbol between the variables that will interact; or two, with a colon between the the variables. If you go with the second method you have to make sure you also include the additions between the variables.
+
+```{r}
+# These models are equivalent. The first approach is a bit nicer to write out.
+maths_moderation <- lm(
+  achieve ~ math_interest * teacher_quality,
+  data = maths
+)
+
+# But the second approach is a bit more explicit about what your model is
+# doing mathematically. Pick whichever you prefer.
+maths_moderation <- lm(
+  achieve ~ math_interest + teacher_quality + math_interest:teacher_quality,
+  data = maths
+)
+```
+
+### Check for evidence of moderation
+
+There are two ways to do this. One, check if the interaction estimate has a statistically significant difference from 0.
+
+```{r}
+summary(maths_moderation)
+```
+
+Two, test the difference in residual sum of squares between the additive and interaction models using the `anova()` function. Note the the p-values are the same regardless of which approach you choose.
+
+```{r}
+anova(maths_additive, maths_moderation, test = "F")
+```
+
+Finally, you can compare the performance of the two models using the `compare_performance()` function from the performance package. The output is kind of messy but you can clean it up by coercing it into a tibble.
+
+```{r}
+performance::compare_performance(maths_additive, maths_moderation) %>% 
+  tibble::as_tibble()
+```
+
+### Simple slopes
+
+First we will create a function that will return a vector of values which we can use for plotting the interaction at different points along the continuum of the moderator. Note: These values are completely arbitrary---the moderating variable is continuous, it has no levels. This only helps with visualization, and even then it is deceiving. We choose the mean and one standard deviation above and below the mean here, because that's how psychologists like to do this. But it's arbitrary, and you could choose any other value you like (e.g., the range, different quantiles, etc.). 
+
+```{r}
+mean_plus_minus_sd <- function(x) {
+  m <- mean(x)
+  s <- sd(x)
+
+  c(m - s, m, m + s)
+}
+```
+
+Second we will use the `emtrends()` function (`?emmeans::emtrends`) from our old friend the **emmeans** package to get the estimated marginal means of our linear trends. This is analagous to the familiar `emmeans()` function from PSYC 615, but is used when we are interested in comparing trends instead of means. We use the `cov.reduce` argument to specify the function name that defines the values of the moderator variable we want to compare trends at.
+
+```{r}
+emmeans::emtrends(
+  maths_moderation,
+  specs = "teacher_quality", # The moderator variable
+  var = "math_interest", # The predictor variable
+  # Condition on the mean+-sd of the moderator variable
+  cov.reduce = list(teacher_quality = mean_plus_minus_sd),
+  infer = TRUE
+)
+```
+
+Finally, we can plot the simple slopes using the `ggemmeans()` function (`?ggeffects::ggemmeans`) from the **ggeffects** package and its associated `plot()` method (`?ggeffects::plot.ggeffects`). This returns a **ggplot2** plot so we can easily change the theme by adding a theme object to it---here we use the `theme_pubr()` function from the ggpubr package to get an APA style theme.
+
+```{r}
+maths_simple_slopes <- ggeffects::ggemmeans(
+    maths_moderation,
+    # The call to [meansd] determines what values to plot the slopes at
+    c("math_interest","teacher_quality [meansd]")
+  )
+
+plot(
+  maths_simple_slopes,
+  ci = TRUE, # You can remove CIs by making this FALSE but you shouldn't
+  colors = "gs" # or "bw"
+) +
+  ggpubr::theme_pubr()
+```
+
+## Categorical predictors
+
+This apparently goes beyond what you're expected to know in the course, but it's useful and perhaps enlightening so I wanted to cover it. We're going to use data from the PSYC 615 Help Yourselfs for t-tests and one-way ANOVAs here.
+
+```{r}
+# t-test data
+spiders <- read_csv(
+  here::here("data", "help-yourself_psyc-615_a1.csv"),
+  col_types = "ffn"
+) 
+
+# One-way ANOVA data
+birthdays <- read_csv(
+  here::here("data", "help-yourself_psyc-615_a2.csv"),
+  col_types = "fn"
+)
+```
+
+### Binary predictor
+
+First let's run a student's t-test on the data.
+
+```{r}
+t.test(anxiety ~ group, var.equal = TRUE, data = spiders)
+```
+
+Then a simple linear regression. If you look at the coefficient for the group predictor you'll notice it has the same estimates as the student's t-test. The student's t-test is just a special case of simple linear regression.
+
+```{r}
+lm(anxiety ~ group, data = spiders) %>% 
+  summary()
+```
+
+### Multilevel predictor
+
+First let's run a one-way ANOVA on the data.
+
+```{r}
+aov(awesomeness ~ bdayquarter, data = birthdays) %>% 
+  summary()
+```
+
+Then a simple linear regression. If you look at the omnibus F-test it's the same as the F-test for the independent variable in the one-way ANOVA table. Indeed, if you pipe the simple linear model into the `anova()` function you will get the exact same table, and if you look at the help page for the `aov()` function (`?aov`) it explicitly tells you it uses the `lm()` function under the hood. One-way ANOVA is just a special case of simple linear regression.
+
+```{r}
+lm(awesomeness ~ bdayquarter, data = birthdays) %>% 
+  summary()
+```
+
+If you follow up the one-way ANOVA you will also notice that the simple linear regression coefficient estimates match the estimated marginal means of the one-way ANOVA model (after simple addition or subtraction since the coefficient estimates are all relative to the intercept). 
+
+```{r}
+aov(awesomeness ~ bdayquarter, data = birthdays) %>%
+  emmeans::emmeans(specs = "bdayquarter")
+```
+
+Finally, the t-tests for each coefficient estimate (barring the intercept) can be replicated using treatment contrasts with a reference level of 1 and unadjusted p-values. Cool!
+
+```{r}
+aov(awesomeness ~ bdayquarter, data = birthdays) %>%
+  emmeans::emmeans(specs = "bdayquarter") %>% 
+  emmeans::contrast(method = "trt.vs.ctrl1", adjust = "none")
+```
+
+This also implies you can follow up your simple linear regression with contrasts in the same way as you would with a one-way ANOVA. As you can see below, the results for the Tukey HSD comparisons are exactly the same between the simple linear regression and the one-way ANOVA.
+
+```{r}
+lm(awesomeness ~ bdayquarter, data = birthdays) %>%
+  emmeans::emmeans(specs = "bdayquarter") %>% 
+  emmeans::contrast(method = "pairwise", adjust = "tukey")
+
+aov(awesomeness ~ bdayquarter, data = birthdays) %>%
+  emmeans::emmeans(specs = "bdayquarter") %>% 
+  emmeans::contrast(method = "pairwise", adjust = "tukey")
+```
+
+## Non-linear Multiple Regression
+
+We can use polynomials to model nonlinear relationships. We'll use the `mtcars` data (`?mtcars`) here since it has some non-linear relationships between its variables.
+
+```{r}
+ggpubr::ggscatter(mtcars, x = "disp", y = "mpg")
+```
+
+There are three ways to model this nonlinear relationship using R's formula syntax. One, we can use the `I()` function (`?I`) then compute the polynomials we want ourselves inside of it.
+
+```{r}
+lm(mpg ~ disp + I(disp^2), data = mtcars) %>% 
+  summary()
+```
+
+Two, we can use the `poly()` function (`?poly`) then specify how many degrees we want the polynomial to be. Note that we set the `raw` argument to `TRUE` to match the results above, which means we used raw instead of orthogonal polynomials. By default the `poly()` function uses orthogonal polynomials. You can find a discussion of the differences between the two here <https://stats.stackexchange.com/questions/258307/raw-or-orthogonal-polynomial-regression> and decide for yourself which is appropriate for your own needs.
+
+```{r}
+lm(mpg ~ poly(disp, 2, raw = TRUE), data = mtcars) %>% 
+  summary()
+```
+
+Three, we can create a new column in our data then put that in our formula. Here we choose to create a raw polynomial for demonstration purposes.
+
+```{r}
+mtcars %>% 
+  mutate(disp_2 = disp^2) %>% 
+  lm(mpg ~ disp + disp_2, data = .) %>% 
+  summary()
+```
+
+## Learning more
+
+### Linear models
+
+- Common statistical tests are linear models (or: how to teach stats) <https://lindeloev.github.io/tests-as-linear/>
+- If you plan to use regression I would read these. They're excellent.
+    - Data Analysis Using Regression and Multilevel/Hierarchical Models <http://www.stat.columbia.edu/~gelman/arm/>
+    - Regression and Other Stories <https://avehtari.github.io/ROS-Examples/>
+
+### Nonparametric Regression
+
+This also goes beyond the course but I wanted to briefly touch on it. If you do not wish to assume the form of the relationship between your predictor and response variables you can use nonparametric forms of regression. These can be more computationally expensive (which is probably irrelevant to you since most psychology data is small) and require relatively larger samples than parametric methods to get good estimates (which may be more relevant), but may give fits and estimates that better reflect the "true" nature of your data; given the complexity of human thought, behaviour, and biology, it is unlikely anything you study is truly defined by a linear relationship.
+
+Here is some reading if you are interested:
+
+- Chapters 1 to 3 of An Introduction to Statistical Learning (download link on page) <https://www.statlearning.com>
+- Generalized Additive Models notes <https://m-clark.github.io/generalized-additive-models/>
+- Nonparametric Regression in R <https://socialsciences.mcmaster.ca/jfox/Books/Companion/appendices/Appendix-Nonparametric-Regression.pdf>
