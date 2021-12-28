@@ -487,6 +487,12 @@ Here is some reading if you are interested:
 - Generalized Additive Models notes <https://m-clark.github.io/generalized-additive-models/>
 - Nonparametric Regression in R <https://socialsciences.mcmaster.ca/jfox/Books/Companion/appendices/Appendix-Nonparametric-Regression.pdf>
 
+### Cross-validation (aka the machine learning approach to stats)
+
+- Choosing Prediction Over Explanation in Psychology: Lessons From Machine Learning <https://doi.org/10.1177/1745691617693393>
+- Putting Psychology to the Test: Rethinking Model Evaluation Through Benchmarking and Prediction <https://doi.org/10.1177/25152459211026864>
+- Chapter 5 of An Introduction to Statistical Learning (download link on page) <https://www.statlearning.com>
+
 ### Thinking critically about mediation and moderation
 
 - Improving Present Practices in the Visual Display of Interactions <https://journals.sagepub.com/doi/10.1177/2515245917746792>
@@ -498,4 +504,10 @@ Here is some reading if you are interested:
 - Statistics as rhetoric in psychology <https://www.tandfonline.com/doi/abs/10.1080/00050069208257601>
 - Some Myths and Legends in Quantitative Psychology <https://www.tandfonline.com/doi/pdf/10.1207/s15328031us0302_3?needAccess=true>
 - More Statistical and Methodological Myths and Urban Legends <https://journals.sagepub.com/doi/10.1177/1094428110391814>
+
+- Statistics and the Scientific Method (emphasizes how regression models have not been so useful in the social sciences) <https://link.springer.com/chapter/10.1007/978-1-4613-8536-3_11>
+
+- Why and How We Should Join the Shift From Significance Testing to Estimation <https://www.preprints.org/manuscript/202112.0235/v1>
 - On the Surprising Longevity of Flogged Horses: Why There Is a Case for the Significance Test <https://journals.sagepub.com/doi/10.1111/j.1467-9280.1997.tb00536.x>
+- Semantic and cognitive tools to aid statistical science: replace confidence and significance by compatibility and surprise <https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-020-01105-9>
+- A Reckless Guide to P-values <https://link.springer.com/chapter/10.1007/164_2019_286>
