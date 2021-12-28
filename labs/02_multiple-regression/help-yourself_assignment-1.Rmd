@@ -486,3 +486,16 @@ Here is some reading if you are interested:
 - Chapters 1 to 3 of An Introduction to Statistical Learning (download link on page) <https://www.statlearning.com>
 - Generalized Additive Models notes <https://m-clark.github.io/generalized-additive-models/>
 - Nonparametric Regression in R <https://socialsciences.mcmaster.ca/jfox/Books/Companion/appendices/Appendix-Nonparametric-Regression.pdf>
+
+### Thinking critically about mediation and moderation
+
+- Improving Present Practices in the Visual Display of Interactions <https://journals.sagepub.com/doi/10.1177/2515245917746792>
+- Precise Answers to Vague Questions: Issues With Interactions <https://journals.sagepub.com/doi/full/10.1177/25152459211007368>
+- That’s a lot to PROCESS! Pitfalls of Popular Path Models <https://psyarxiv.com/paeb7/>
+
+### Improve your statistical thinking
+
+- Statistics as rhetoric in psychology <https://www.tandfonline.com/doi/abs/10.1080/00050069208257601>
+- Some Myths and Legends in Quantitative Psychology <https://www.tandfonline.com/doi/pdf/10.1207/s15328031us0302_3?needAccess=true>
+- More Statistical and Methodological Myths and Urban Legends <https://journals.sagepub.com/doi/10.1177/1094428110391814>
+- On the Surprising Longevity of Flogged Horses: Why There Is a Case for the Significance Test <https://journals.sagepub.com/doi/10.1111/j.1467-9280.1997.tb00536.x>
