@@ -26,7 +26,11 @@ library(here)
 library(tidyverse)
 library(broom)
 library(performance)
+library(correlation)
 library(ppcor)
+library(effectsize)
+library(emmeans)
+library(ggeffects)
 library(ggpubr)
 ```
 
@@ -334,7 +338,7 @@ mean_plus_minus_sd <- function(x) {
 Second we will use the `emtrends()` function (`?emmeans::emtrends`) from our old friend the **emmeans** package to get the estimated marginal means of our linear trends. This is analagous to the familiar `emmeans()` function from PSYC 615, but is used when we are interested in comparing trends instead of means. We use the `cov.reduce` argument to specify the function name that defines the values of the moderator variable we want to compare trends at.
 
 ```{r}
-emmeans::emtrends(
+maths_emm <- emmeans::emtrends(
   maths_moderation,
   specs = "teacher_quality", # The moderator variable
   var = "math_interest", # The predictor variable
@@ -342,6 +346,8 @@ emmeans::emtrends(
   cov.reduce = list(teacher_quality = mean_plus_minus_sd),
   infer = TRUE
 )
+
+maths_emm
 ```
 
 Finally, we can plot the simple slopes using the `ggemmeans()` function (`?ggeffects::ggemmeans`) from the **ggeffects** package and its associated `plot()` method (`?ggeffects::plot.ggeffects`). This returns a **ggplot2** plot so we can easily change the theme by adding a theme object to it---here we use the `theme_pubr()` function from the ggpubr package to get an APA style theme.
@@ -367,13 +373,13 @@ This apparently goes beyond what you're expected to know in the course, but it's
 
 ```{r}
 # t-test data
-spiders <- read_csv(
+spiders <- readr::read_csv(
   here::here("data", "help-yourself_psyc-615_a1.csv"),
   col_types = "ffn"
 ) 
 
 # One-way ANOVA data
-birthdays <- read_csv(
+birthdays <- readr::read_csv(
   here::here("data", "help-yourself_psyc-615_a2.csv"),
   col_types = "fn"
 )
