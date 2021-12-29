@@ -256,22 +256,11 @@ maths_model_multiple_table
 
 ## Moderation
 
-Moderation analysis tests whether the association between a predictor variable and a response variable depends on the magnitude of a moderating variable. 
+Moderation analysis tests whether the association between a predictor variable and a response variable depends on the magnitude or level of another response variable. In other words, it's a linear model with an interaction term. If your predictors are categorical then it's no different from a multiway ANOVA. Nothing special. And just like in the ANOVA situation, inferring any causal relationships between the variables you model depends on how the data came to be. If it did not come from a careful controlled experiment you probably don't have enough evidence to make causal statements.
 
 ### Check for redundancy between predictor and moderator
 
 You can do this using a Pearson correlation, which we demonstrated already.
-
-### Mean centre predictor and moderator
-
-Mean centring reduces multicollinearity between variables. You can easily centre variables using the `mutate()` and `across()` functions from the dplyr package. The `across()` function lets you apply some operation across multiple columns of your choosing. Its first argument specifies which columns to operate over, which you can specify using tidy selection (`?tidyr::tidyr_tidy_select`); here we choose to operate over any column whose type is numeric. Its second argument defines the operation you want to apply across columns; you start with a tilde, then write out the operation you want to do. The `.x` variable acts as a placeholder for the each column you are operating across.
-
-```{r}
-maths_centred <- maths %>% 
-  dplyr::mutate(
-    dplyr::across(where(is.numeric), ~ .x - mean(.x, na.rm = TRUE))
-  )
-```
 
 ### Fit additive and interaction regression models
 
@@ -301,7 +290,7 @@ maths_moderation <- lm(
 )
 ```
 
-### Check for evidence of moderation
+### Check for evidence of an interaction (aka moderation)
 
 There are two ways to do this. One, check if the interaction estimate has a statistically significant difference from 0.
 
@@ -365,6 +354,36 @@ plot(
   colors = "gs" # or "bw"
 ) +
   ggpubr::theme_pubr()
+```
+
+## Transforming variables
+
+You may choose to transform your variables to improve model fit or change the way in which you interpret your regression coefficient estimates.
+
+### Mean centring
+
+You can easily centre variables using the `mutate()` and `across()` functions from the dplyr package. The `across()` function lets you apply some operation across multiple columns of your choosing. Its first argument specifies which columns to operate over, which you can specify using tidy selection (`?tidyr::tidyr_tidy_select`); here we choose to operate over any column whose type is numeric (but you can choose specific columns too). Its second argument defines the operation you want to apply across columns; you start with a tilde, then write out the operation you want to do. The `.x` variable acts as a placeholder for the each column you are operating across. If you want to preserve the original columns and make new columns for the centred variables you can use the optional `.names` argument.
+
+Note that mean centring *does not* reduce multicollinearity in linear regression, since all it's doing is transforming variables by a constant. Multicollinearity issues come from there being too little information in your data; centring does not add any new information to your data, so it cannot help with multicollinearity. Centred and uncentred models are algebraically equivalent. All centring does is change how you would interpret your regression coefficients.
+
+```{r}
+maths %>% 
+  dplyr::mutate(
+    dplyr::across(
+      where(is.numeric),
+      ~ .x - mean(.x, na.rm = TRUE),
+      .names = "{.col}_centred"
+    )
+  )
+```
+
+### Log and square root scaling
+
+You can do this directly in the formula syntax using the `log()` and `sqrt()` functions (log is more common). Three good reasons for this are to improve model fit, aid in interpretation, or to follow theory. Your interpretations of the coefficients will vary depending on what you do and do not scale.
+
+```{r}
+lm(achieve ~ log(math_interest), data = maths) %>% 
+  summary()
 ```
 
 ## Categorical predictors
@@ -482,6 +501,9 @@ mtcars %>%
 - If you plan to use regression I would read these. They're excellent.
     - Data Analysis Using Regression and Multilevel/Hierarchical Models <http://www.stat.columbia.edu/~gelman/arm/>
     - Regression and Other Stories <https://avehtari.github.io/ROS-Examples/>
+- Exegeses on linear models <https://www.stats.ox.ac.uk/pub/MASS3/Exegeses.pdf>
+- In linear regression, when is it appropriate to use the log of an independent variable instead of the actual values? <https://stats.stackexchange.com/q/298/337979>
+- Interpreting Log Transformations in a Linear Model <https://data.library.virginia.edu/interpreting-log-transformations-in-a-linear-model/>
 
 ### Nonparametric Regression
 
@@ -501,6 +523,7 @@ Here is some reading if you are interested:
 
 ### Thinking critically about mediation and moderation
 
+- Understanding Interaction Models: Improving Empirical Analyses <https://www.jstor.org/stable/25791835>
 - Improving Present Practices in the Visual Display of Interactions <https://journals.sagepub.com/doi/10.1177/2515245917746792>
 - Precise Answers to Vague Questions: Issues With Interactions <https://journals.sagepub.com/doi/full/10.1177/25152459211007368>
 - That’s a lot to PROCESS! Pitfalls of Popular Path Models <https://psyarxiv.com/paeb7/>
