@@ -1,0 +1,270 @@
+---
+title: "Help yourself: Assignment 4"
+author:
+  - name: "Michael McCarthy"
+    url: https://github.com/mccarthy-m-g
+    affiliation: "PSYC 617 Lab"
+    affiliation_url: https://github.com/mccarthy-m-g/psyc-617-lab
+repository_url: https://github.com/mccarthy-m-g/psyc-617-lab
+output:
+  distill::distill_article:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = "#>", collapse = TRUE)
+```
+
+## Prerequisites
+
+To access the datasets, help pages, and functions that we will use in this *help yourself*, load the following packages:
+
+```{r prerequisites}
+here::i_am("labs/05_multilevel-modelling/help-yourself_assignment-4.Rmd")
+
+library(here)
+library(tidyverse)
+library(broom.mixed)
+library(lme4)
+```
+
+As well as this Help Yourself's example data:
+
+```{r example-data}
+sales <- readr::read_csv(
+  here::here("data", "help-yourself_a4.csv"),
+  col_types = "fnfnfn"
+)
+```
+
+## Terminology
+
+This is ridiculous.
+
+```{r}
+# Credit to https://twitter.com/ChelseaParlett/status/1458461737431146500?s=20
+knitr::include_graphics(here::here("images", "multilevel-models.jpg"))
+```
+
+From [Wikipedia](https://en.wikipedia.org/wiki/Multilevel_model): "Multilevel models (also known as hierarchical linear models, linear mixed-effect model, mixed models, nested data models, random coefficient, random-effects models, random parameter models, or split-plot designs) are statistical models of parameters that vary at more than one level."
+
+And if that isn't bad enough:
+
+- **Hierarchical linear models** are a type of linear regression model in which observations fall into hierarchical, or completely nested levels.
+- **Hierarchical regression**, on the other hand, is a model-building technique in any regression model (e.g., forward or backward selection).
+
+I kid you not.
+
+Watch out for the terminology, but don't let it get in the way. Pick whichever term you like. I'm partial to linear mixed effect models (or mixed models for short) so I'll be going with that here.
+
+## Linear models
+
+Let's start with a simple linear regression before we dive in. Here the `sales` variable represents the average number of sales a month a salesperson makes in a year. Presumably some positive relationship exists between their years of experience as a salesperson and their sales---the model seems to support this.
+
+```{r}
+lm(sales ~ years_experience, data = sales) %>% 
+  summary()
+```
+
+## Linear mixed models
+
+However, if you inspect the data you will notice that the salespersons work in different car dealerships. Twenty to be exact.
+
+```{r}
+sales %>% 
+  dplyr::distinct(dealership)
+```
+
+It would probably be good to model which dealership a salesperson belongs to, so our model better matches reality. There are likely differences between dealerships that affect a salesperson's sales, and we want to account for that.
+
+We can use the `lmer()` function (`?lme4::lmer`) from the **lme4** package to fit linear mixed effects models to explore these relationships. Note that the lme4 package also has a `glmer()` function for fitting generalized linear mixed effects models, and an `nlmer()` function for fitting nonlinear mixed effects models. You may also be interested in the **glmmTMB** package, which can everything the lme4 package can and more. And if you need even more flexibility then you can use the **brms** package, which takes a Bayesian approach.
+
+The lme4 package has its own formula syntax. It's the same as what you're used to for the most part, but has a bit extra so you can specify random effects. We'll build a few models to show how it works.
+
+<!-- Note: if you like the lme4 formula syntax you can also use it for ANOVA models using the `aov_4()` function instead of the `aov_car()` function in the **afex** package (like we did in PSYC 615). -->
+
+### Null model
+
+Our null model in linear regression would look like this, an intercept only model.
+
+```{r}
+sales_null_model <- lm(sales ~ 1, data = sales)
+
+summary(sales_null_model)
+```
+
+If we want to take dealership into account, we can build an intercept only linear mixed effects model where the intercept is a random effect. This will give us coefficient estimates for the fixed and random effects.
+
+```{r}
+sales_null_mixed_model <- lme4::lmer(sales ~ 1 + (1 | dealership), data = sales)
+
+summary(sales_null_model)
+```
+
+We can also compare these models with a likelihood ratio test using the `anova()` function.
+
+```{r}
+anova(sales_null_mixed_model, sales_null_model, test = "LRT")
+```
+
+### Random intercept model
+
+Now let's add the predictor back. First in the linear model.
+
+```{r}
+sales_model_1 <- lm(sales ~ years_experience, data = sales)
+
+summary(sales_model_1)
+```
+
+Now in the mixed model.
+
+```{r}
+sales_mixed_model_1 <- lme4::lmer(
+  sales ~ years_experience + (1 | dealership),
+  data = sales
+)
+
+summary(sales_mixed_model_1)
+```
+
+### Random intercept and slope model
+
+There are two ways to add random slopes to a mixed model. The first is to have an uncorrelated random intercept and slope.
+
+```{r}
+# FIXME: Not converging!
+sales_mixed_model_2 <- lme4::lmer(
+  sales ~ years_experience + (1 | dealership) + (0 + years_experience | dealership),
+  data = sales
+)
+
+summary(sales_mixed_model_2)
+```
+
+The second is to have a correlated random intercept and slope.
+
+```{r}
+sales_mixed_model_3 <- lme4::lmer(
+  sales ~ years_experience + (1 + years_experience | dealership),
+  data = sales
+)
+
+summary(sales_mixed_model_3)
+```
+
+Including correlations between the random intercept and slope may lead to overly complex models, so model comparisons might help you decide whether or not to include it.
+
+## Convergence issues
+
+The random intercept and slope models above both failed to converge. You should not ignore this. You can however take some steps to decide how to assess and hopefully resolve it. The `?lme4::convergence` help page discusses how you can assess convergence for fitted models. The gold standard approach suggested by the lme4 authors is to use the `allFit()` function (`?lme4::allFit`) to try the fit with all available optimizers. If all optimizers converge to values that are practically equivalent, then we can consider the convergence warnings to be false positives.
+
+```{r}
+# Note: if you get an error saying "there is no package called ...", install
+# the package(s) and that should resolve the error.
+# Note 2: This function has an argument for parallel processing if you find it
+# takes too long. This will speed it up.
+convergence_assessment <- lme4::allFit(sales_mixed_model_3)
+
+summary(convergence_assessment)
+```
+
+Here we see the following.
+
+Under `msgs`:
+
+- 3 optimizers had no warnings or errors (bobyqa, Nelder_Mead, nlminbwrap).
+- 3 optimizers failed to converge (nmkbw, optimx.L-BFGS-B, nloptwrap.NLOPT_LN_BOBYQA).
+- 1 optimizer had a singular fit (nloptwrap.NLOPT_LN_NELDERMEAD); see the `?lme4::isSingular` help page.
+
+Under the headings for different estimates:
+
+- Values are practically equivalent for all the optimizers, except for the nloptwrap.NLOPT_LN_NELDERMEAD optimizer which had a singular fit.
+- When we get a singular fit it suggests our model might need to be simplified (i.e., drop random slopes). It is very common for overfitted mixed models to result in singular fits.
+- But we only get singular fit with one optimizer so kind of a mixed message here. Ideally we start with theories and hypotheses before doing statistics so we can take a principled approach to situations like this. 
+
+Under `theta`:
+
+- The theta value for `dealership.years_experience` (i.e., the random slope) is zero for the nloptwrap.NLOPT_LN_NELDERMEAD optimizer which is the likely cause of the singular fit (singularity means that some of the thetas are exactly zero).
+
+Making a decision:
+
+- Here I'm going to decide the convergence issues were a false positive, and we don't need to worry about the single case of singularity. This may or may not be the right decision. When you run into issues like this it's good to take some perspective and ask if what you're trying to do statistically is appropriate given the data available to you.
+
+Anyways, since we've decided the convergence issues were a false positive, we can either move on with the model as is, or refit with one of the optimizers that converged. Here we'll refit just to demonstrate how to select different optimizers. The `lmerControl()` function (`?lme4::lmerControl`) has a number of arguments that allow you to control how mixed model fitting is done.
+
+```{r}
+sales_mixed_model_4 <- lme4::lmer(
+  sales ~ years_experience + (1 + years_experience | dealership),
+  control = lme4::lmerControl(optimizer = "bobyqa"),
+  data = sales
+)
+
+summary(sales_mixed_model_4)
+```
+
+
+## Significance tests for fixed effects coefficients
+
+You might have noticed there are no significance tests for the coefficients. There is a very good reason for this: For anything beyond special cases that correspond to classical experimental designs (i.e. balanced designs that are nested, split-plot, randomized block, etc.), the [residual degrees of freedom are unknown](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#why-doesnt-lme4-display-denominator-degrees-of-freedomp-values-what-other-options-do-i-have). So the authors of the lme4 package [made a conscious decision](https://stat.ethz.ch/pipermail/r-help/2006-May/094765.html) not to provide any degrees of freedom; as a consequence you do not get a significance test for the coefficients. No stargazing today.
+
+If you *need* a p-value there are a few ways to go about getting one. Every single one of these ways is an ad-hoc solution at best, and you should interpret these p-values with even more caution than usual. Every coefficient comes with a parameter estimate and standard error which you can use to make an informed judgement with or *without* adding p-values into the mix. Anyways, here are the approaches you can take:
+
+- Likelihood ratio tests
+- Applying the $z$ distribution to the Wald $t$ values of coefficients ($t$-as-$z$)
+- Parametric bootstrapping
+- Likelihood profiles
+- Kenward-Roger approximation
+- Satterthwaite approximation
+- Guess the residual degrees of freedom from standard rules for standard designs 
+
+The fitting method you use (maximum likelihood or restricted maximum likelihood) will influence the p-values (REML tends to be better) and determine which approaches are available to you.
+
+I suggest you read the following as a jumping off point and make an informed decision for yourself about whether you need p-values, and if you do, what the best approach is to getting them:
+
+- Evaluating significance in linear mixed-effects models in R <https://link.springer.com/article/10.3758/s13428-016-0809-y>
+- GLMM FAQ: Model diagnostics <https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#model-diagnostics>
+- lmerTest Package: Tests in Linear Mixed Effects Models <https://www.jstatsoft.org/article/view/v082i13>
+
+If you decide you need p-values, the `model_parameters()` function (`?parameters::model_parameters.merMod`) from the **parameters** package supports most of the approaches discussed above. The `ci_method` argument can be used to specify the method for computing degrees of freedom for confidence intervals (CI) and the related p-values. The following approaches are available if you are using the lme4 package: “wald”, “ml1”, “betwithin”, “kr”, “satterthwaite”, “kenward”, “boot”, “profile”, “residual”, “normal”. A few more approaches are available if you use the glmmTMB package. See section the function's help page for further details.
+
+```{r}
+# t-as-z
+parameters::model_parameters(sales_null_model, ci_method = "wald")
+
+# Satterthwaite approximation
+parameters::model_parameters(sales_null_model, ci_method = "satterthwaite")
+
+# Kenward-Roger approximation
+parameters::model_parameters(sales_null_model, ci_method = "kenward")
+
+# Parametric bootstrapping
+parameters::model_parameters(sales_null_model, ci_method = "boot", iterations = 1000)
+
+# Likelihood profile
+parameters::model_parameters(sales_null_model, ci_method = "profile")
+```
+
+For likelihood ratio tests they can be performed as usual with the `anova()` function by setting up the model so that the parameter can be isolated/dropped. Likelihood profiles serve the same purpose though so if you want a likelihood based method you may as well do that. This will also keep you away from thinking about doing significance tests for random effects, which may [not be advisable](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#testing-significance-of-random-effects).
+
+You should report whatever approach you choose somewhere in your report so the reader knows what you did.
+
+
+
+
+
+
+
+
+## Learning more
+
+
+- Mixed Models with R: Getting started with random effects <https://m-clark.github.io/mixed-models-with-R/>
+- Thinking About Mixed Models <https://m-clark.github.io/docs/mixedModels/mixedModels.html>
+- GLMM FAQ (lots of valuable info here) <https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html>
+
+
+
+### R
+
+- R's lmer cheat sheet <https://stats.stackexchange.com/questions/13166/rs-lmer-cheat-sheet>
