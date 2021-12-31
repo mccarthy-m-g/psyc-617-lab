@@ -26,6 +26,7 @@ library(here)
 library(tidyverse)
 library(broom.mixed)
 library(lme4)
+library(performance)
 ```
 
 As well as this Help Yourself's example data:
@@ -185,11 +186,12 @@ Under the headings for different estimates:
 
 Under `theta`:
 
-- The theta value for `dealership.years_experience` (i.e., the random slope) is zero for the nloptwrap.NLOPT_LN_NELDERMEAD optimizer which is the likely cause of the singular fit (singularity means that some of the thetas are exactly zero).
+- The theta value for `dealership.years_experience` (i.e., the random slope) is zero for the nloptwrap.NLOPT_LN_NELDERMEAD optimizer which is the likely cause of the singular fit (singularity means that some of the thetas are exactly zero in simple cases).
 
 Making a decision:
 
-- Here I'm going to decide the convergence issues were a false positive, and we don't need to worry about the single case of singularity. This may or may not be the right decision. When you run into issues like this it's good to take some perspective and ask if what you're trying to do statistically is appropriate given the data available to you.
+- Here I'm going to decide the convergence issues were a false positive, and we don't need to worry about the single case of singularity. This may or may not be the right decision. When you run into issues like this it's good to take some perspective and ask if what you're trying to do statistically is appropriate given the data available to you. Doing further exploratory data analysis might help here, and again, if you go into this with a priori theory and hypotheses as well.
+- It might also be beneficial to decide how you will deal with convergence issues before running any statistical tests. Convergence issues are common, and coming in with a plan will reduce the chances you make a bad decision after seeing some results.
 
 Anyways, since we've decided the convergence issues were a false positive, we can either move on with the model as is, or refit with one of the optimizers that converged. Here we'll refit just to demonstrate how to select different optimizers. The `lmerControl()` function (`?lme4::lmerControl`) has a number of arguments that allow you to control how mixed model fitting is done.
 
@@ -203,6 +205,7 @@ sales_mixed_model_4 <- lme4::lmer(
 summary(sales_mixed_model_4)
 ```
 
+As with everything else, we should be transparent about what we did here in our statistical report. Even if we don't run into convergence issues, we should still declare the optimization algorithm we chose in our report (and cite its authors!). If you stick with the default optimizer, you can see what that is on the `?lme4::lmerControl` help page.
 
 ## Significance tests for fixed effects coefficients
 
@@ -230,40 +233,175 @@ If you decide you need p-values, the `model_parameters()` function (`?parameters
 
 ```{r}
 # t-as-z
-parameters::model_parameters(sales_null_model, ci_method = "wald")
+parameters::model_parameters(sales_mixed_model_4, ci_method = "wald")
 
 # Satterthwaite approximation
-parameters::model_parameters(sales_null_model, ci_method = "satterthwaite")
+parameters::model_parameters(sales_mixed_model_4, ci_method = "satterthwaite")
 
 # Kenward-Roger approximation
-parameters::model_parameters(sales_null_model, ci_method = "kenward")
+parameters::model_parameters(sales_mixed_model_4, ci_method = "kenward")
 
 # Parametric bootstrapping
-parameters::model_parameters(sales_null_model, ci_method = "boot", iterations = 1000)
+# Notes:
+# - This is quite slow. You can speed it up with fewer iterations, but you want
+# lots of iterations for your final estimates (1000 is a good default).
+# - We also get singularity warnings on around 27% of the iterations, and the 
+# CIs for the random effects correlation do not look trustworthy. Perhaps another
+# reason to rethink including random slopes.
+parameters::model_parameters(sales_mixed_model_4, ci_method = "boot", iterations = 1000)
 
 # Likelihood profile
-parameters::model_parameters(sales_null_model, ci_method = "profile")
+# Notes:
+# - This is a little slow but not as much as bootstrapping.
+# - Some of the random effects CIs here should also give us a pause.
+parameters::model_parameters(sales_mixed_model_4, ci_method = "profile")
 ```
 
 For likelihood ratio tests they can be performed as usual with the `anova()` function by setting up the model so that the parameter can be isolated/dropped. Likelihood profiles serve the same purpose though so if you want a likelihood based method you may as well do that. This will also keep you away from thinking about doing significance tests for random effects, which may [not be advisable](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#testing-significance-of-random-effects).
 
-You should report whatever approach you choose somewhere in your report so the reader knows what you did.
+You should report whatever approach you choose somewhere in your report so the reader knows what you did. It might also be good to see how well the different approaches agree if you didn't make a principled decision (and contingency plan) before looking at the results.
 
+Finally, you if you choose to go with Kenward-Roger or Satterthwaite approximation, you may also be interested in the **lmerTest** package. It's a commonly used package which adds approximated degrees of freedom and p-values to the output of the `summary()` and `anova()` functions of `lmer()` output. See the `?lmerTest::summary.lmerModLmerTest` and `?lmerTest::anova.lmerModLmerTest` help pages.
 
+## Effect size (ICC)
 
+The `icc()` function (`?performance::icc`) from the performance package can be used to calculate the intraclass-correlation coefficient (ICC; sometimes also called variance partition coefficient).
 
+```{r}
+performance::icc(sales_mixed_model_4)
+```
 
+TODO: Are standardized fixed coefficients okay?
 
+```{r}
+effectsize::standardize_parameters(sales_mixed_model_4)
+```
+
+## Model comparisons
+
+As demonstrated earlier, we can do a likelihood ratio test using the `anova()` function. Any number of nested models can be included here. Note that the models will be refit using maximum likelihood instead of restricted maximum likelihood for these comparisons.
+
+```{r}
+anova(sales_mixed_model_4, sales_mixed_model_2, test = "LRT")
+```
+
+And other metrics, same as we did for linear regression.
+
+```{r}
+performance::compare_performance(sales_mixed_model_4, sales_mixed_model_2) %>% 
+  tibble::as_tibble()
+```
+
+## Estimation method
+
+The estimation method used by the `lmer()` function is determined by the `REML` argument. By default this is set to `TRUE`. If you want to use maximum likelihood instead, set it to `FALSE`.
+
+## Assumptions and Diagnostics
+
+You can use the same diagnostic tools from the performance package you used for linear regression on linear mixed effect models.
+
+```{r}
+# I'm dropping the outliers plot here because including it was throwing an error
+performance::check_model(
+  sales_mixed_model_4,
+  check = c("vif", "qq", "normality", "linearity", "ncv", "homogeneity", "reqq", "reqq")
+)
+```
+
+## Interactions
+
+You specify interactions like usual. Here let's see if the relationship between years of experience and sales depends on the sex of a salesperson, while accounting for the random effect of the dealership they work at.
+
+```{r}
+sales_mixed_model_5 <- sales %>% 
+  # Centre predictors first, see Tom's lecture notes
+  dplyr::mutate(
+    dplyr::across(
+      years_experience, ~ .x - mean(.x, na.rm = TRUE), .names = "{.col}_centred"
+    )
+  ) %>% 
+  # Random intercept model with an interaction between a level 1 and 2 predictor
+  lme4::lmer(
+  sales ~ years_experience_centred*female + (1 | dealership),
+  data = .
+)
+
+summary(sales_mixed_model_5)
+```
+
+And you can follow up with the **emmeans** package as usual, with either the `emmeans()` or `emtrends()` functions. This is a bad example since the coefficient for female in the model is the same as pairwise test we get in the follow-up, but you get the point. There is one new thing to note: When constructing the reference grid we can choose how degrees of freedom are approximated (as we did above, but with less options).
+
+```{r}
+sales_mixed_emm <- emmeans::emmeans(
+  sales_mixed_model_5,
+  specs = "female",
+  lmer.df = "satterthwaite" # or "kenward", or "asymptotic" (t-as-z)
+)
+
+emmeans::contrast(sales_mixed_emm, method = "pairwise")
+```
+
+You can read the sophisticated models in emmeans vignette for more details <https://cran.r-project.org/web/packages/emmeans/vignettes/sophisticated.html>.
+
+You might also want to read Jason Newsom's lecture notes on centring in mixed models <http://web.pdx.edu/~newsomj/mlrclass/ho_centering.pdf>. Centring is more complicated in linear mixed models than in linear regression, and there's some good discussion on the topic there. It's still important to have good reasons for centring, rather than doing it as a ritual, but there tend to be more good reasons to centre in mixed models. This discussion on centring is also thoughtful <https://centerstat.org/centering/>.
+
+Finally, just a note: You cannot do followups using random effects as a grouping variable with the emmeans package---you can only follow up fixed effects. See the discussion here <https://github.com/rvlenth/emmeans/issues/118>. If you have a discrete predictor you could treat it as both a fixed and random effect, which *may* be appropriate, and will allow followups with the emmeans package. See this blog <https://www.muscardinus.be/2017/08/fixed-and-random/>.
+
+## ANOVA comparison
+
+Some ANOVA models can be thought of as special cases of linear mixed models. Again, we'll use the Help Yourself data and example from PSYC 615 to demonstrate.
+
+```{r}
+# Repeated measures ANOVA
+scores <- readr::read_csv(
+  here::here("data", "help-yourself_psyc-615_a6.csv"),
+  col_types = "fffd"
+)
+```
+
+Here is a two-way repeated measures ANOVA (i.e., higher order).
+
+```{r}
+# Higher order (both factors are repeated)
+afex::aov_car(
+  score ~ task * level + Error(id/(task*level)),
+  type = 3,
+  data = scores
+) %>% 
+  summary()
+```
+
+Now as a linear mixed model. We can see a lot of agreement between the two models, except for the sum of squares for the main effects. If we use one of the degrees of freedom approximations we can also see agreement between those and the significance tests in both models. This goes back to the point above that the degrees of freedom for classical experimental designs can likely be safely approximated.  
+
+```{r}
+scores_mixed_model <- lme4::lmer(
+  score ~ task * level + (1 | id) + (1 | task:id) + (1 | level:id),
+  contrasts = list(task = contr.sum, level = contr.sum),
+  data = scores
+)
+
+anova(scores_mixed_model)
+car::Anova(scores_mixed_model, type = 3, test = "F")
+```
+
+If we drop some of the random effects we get the same sum of squares as in the ANOVA model. I'm not actually sure why, but I thought I'd point it out. It messes everything else up though. Anyways, point being, ANOVAs that include repeated measures can be thought of as special cases of mixed models.
+
+```{r}
+lme4::lmer(
+  score ~ task * level + (1 | id),
+  contrasts = list(task = contr.sum, level = contr.sum),
+  data = scores
+) %>% 
+  anova()
+```
 
 
 ## Learning more
 
-
+- Fitting Linear Mixed-Effects Models Using lme4 <https://cran.r-project.org/web/packages/lme4/vignettes/lmer.pdf>
 - Mixed Models with R: Getting started with random effects <https://m-clark.github.io/mixed-models-with-R/>
 - Thinking About Mixed Models <https://m-clark.github.io/docs/mixedModels/mixedModels.html>
-- GLMM FAQ (lots of valuable info here) <https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html>
-
-
+- GLMM FAQ (lots of valuable info here; you should read through the whole thing at least once) <https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html>
 
 ### R
 
