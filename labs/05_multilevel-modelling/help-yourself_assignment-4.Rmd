@@ -26,7 +26,13 @@ library(here)
 library(tidyverse)
 library(broom.mixed)
 library(lme4)
+library(parameters)
 library(performance)
+library(effectsize)
+library(emmeans)
+library(afex)
+library(car)
+library(equatiomatic)
 ```
 
 As well as this Help Yourself's example data:
@@ -294,7 +300,7 @@ performance::compare_performance(sales_mixed_model_4, sales_mixed_model_2) %>%
 
 ## Estimation method
 
-The estimation method used by the `lmer()` function is determined by the `REML` argument. By default this is set to `TRUE`. If you want to use maximum likelihood instead, set it to `FALSE`.
+The estimation method used by the `lmer()` function is determined by the `REML` argument. By default this is set to `TRUE`. If you want to use maximum likelihood instead, set it to `FALSE`. As far as which is best, I don't have a good recommendation. You'll probably hear restricted maximum likelihood is better, but Douglas Bates (author of the lme4 package) has described it as statistician's original sin <https://stat.ethz.ch/pipermail/r-sig-mixed-models/2015q3/023743.html>, and has some good discussion here <https://stat.ethz.ch/pipermail/r-sig-mixed-models/2015q3/023750.html> and on page 100 in "lme4: Mixed-effects modeling with R" (linked below).
 
 ## Assumptions and Diagnostics
 
@@ -341,15 +347,15 @@ sales_mixed_emm <- emmeans::emmeans(
 emmeans::contrast(sales_mixed_emm, method = "pairwise")
 ```
 
-You can read the sophisticated models in emmeans vignette for more details <https://cran.r-project.org/web/packages/emmeans/vignettes/sophisticated.html>.
+You can read the sophisticated models in emmeans vignette for more details <https://cran.r-project.org/web/packages/emmeans/vignettes/sophisticated.html>. And more examples can be found here <https://rpubs.com/palday/mixed-interactions>.
 
 You might also want to read Jason Newsom's lecture notes on centring in mixed models <http://web.pdx.edu/~newsomj/mlrclass/ho_centering.pdf>. Centring is more complicated in linear mixed models than in linear regression, and there's some good discussion on the topic there. It's still important to have good reasons for centring, rather than doing it as a ritual, but there tend to be more good reasons to centre in mixed models. This discussion on centring is also thoughtful <https://centerstat.org/centering/>.
 
 Finally, just a note: You cannot do followups using random effects as a grouping variable with the emmeans package---you can only follow up fixed effects. See the discussion here <https://github.com/rvlenth/emmeans/issues/118>. If you have a discrete predictor you could treat it as both a fixed and random effect, which *may* be appropriate, and will allow followups with the emmeans package. See this blog <https://www.muscardinus.be/2017/08/fixed-and-random/>.
 
-## ANOVA comparison
+## Repeated measures ANOVA comparison
 
-Some ANOVA models can be thought of as special cases of linear mixed models. Again, we'll use the Help Yourself data and example from PSYC 615 to demonstrate.
+ANOVA models with repeated measures can be thought of as special cases of linear mixed models. Again, we'll use the Help Yourself data and example from PSYC 615 to demonstrate.
 
 ```{r}
 # Repeated measures ANOVA
@@ -384,7 +390,7 @@ anova(scores_mixed_model)
 car::Anova(scores_mixed_model, type = 3, test = "F")
 ```
 
-If we drop some of the random effects we get the same sum of squares as in the ANOVA model. I'm not actually sure why, but I thought I'd point it out. It messes everything else up though. Anyways, point being, ANOVAs that include repeated measures can be thought of as special cases of mixed models.
+If we drop some of the random effects we get the same sum of squares as in the ANOVA model. I'm not actually sure why (maybe a Type 3 sum of squares thing?), but I thought I'd point it out. It messes everything else up though. Anyways, point being, ANOVAs that include repeated measures can be thought of as special cases of mixed models.
 
 ```{r}
 lme4::lmer(
@@ -395,6 +401,43 @@ lme4::lmer(
   anova()
 ```
 
+Michael Clark explores these ideas more here <https://m-clark.github.io/docs/mixedModels/anovamixed.html>, and Daniel Wollschlaeger has lme4 code for a number of classical ANOVA equivalent designs here <http://www.dwoll.de/rexrepos/posts/anovaMixed.html>.
+
+## Tidy methods
+
+We use the **broom.mixed** package instead of the **broom** package to use the `tidy()`, `augment()`, and `glance()` functions (`?broom.mixed::tidy.merMod`) on lme4 models. There are a few extra arguments for these functions specific to mixed models; you can read more on the help page. Otherwise they work the same as usal.
+
+```{r}
+broom.mixed::tidy(sales_mixed_model_5)
+broom.mixed::augment(sales_mixed_model_5)
+broom.mixed::glance(sales_mixed_model_5)
+```
+
+## Equations
+
+It can be helpful to write the equations down for a mixed model to make sure you are misspecifying anything. The `extract_eq()` function (`?equatiomatic::extract_eq`) from the **equatiomatic** package can do this for you. The authors of the package aim to support every model that is supported by the broom package in the future. Currently it supports models we use in this course such as `lm()`, `glm()`, and `lmer()` models. Mixed models use the notation from [Gelman and Hill](http://www.stat.columbia.edu/~gelman/arm/), so this will probably look unfamiliar to you.
+
+```{r}
+# This returns the math code you would put in the body of your R Markdown
+# document
+equatiomatic::extract_eq(sales_null_mixed_model)
+```
+
+$$
+\begin{aligned}
+  \operatorname{sales}_{i}  &\sim N \left(\alpha_{j[i]}, \sigma^2 \right) \\
+    \alpha_{j}  &\sim N \left(\mu_{\alpha_{j}}, \sigma^2_{\alpha_{j}} \right)
+    \text{, for dealership j = 1,} \dots \text{,J}
+\end{aligned}
+$$
+
+You can also use the `tex_preview()` function (`?texPreview::tex_preview`) from the **texPreview** package to preview equations in the RStudio viewer. This requires some additional setup, described here <https://github.com/yonicd/texPreview#functionality>.
+
+NOTE: FOR THE ASSIGNMENT I WILL NOT ACCEPT THIS FORM OF NOTATION; USE THE NOTATION FROM TOM'S LECTURE.
+
+## Generalized linear mixed effects models
+
+Just wanted to share this paper by Jonas Kristoffer Lindeløv on why you might want to use a GLMER for reaction time data instead of a model that assumes your errors are normally distributed <https://lindeloev.github.io/shiny-rt/>. Not everything we study is best characterized by a normal distribution, and that shouldn't necessarily be your go to choice just because your stats education focused on it.
 
 ## Learning more
 
@@ -402,7 +445,23 @@ lme4::lmer(
 - Mixed Models with R: Getting started with random effects <https://m-clark.github.io/mixed-models-with-R/>
 - Thinking About Mixed Models <https://m-clark.github.io/docs/mixedModels/mixedModels.html>
 - GLMM FAQ (lots of valuable info here; you should read through the whole thing at least once) <https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html>
+- An Introduction to Mixed Models for Experimental Psychology <http://singmann.org/download/publications/singmann_kellen-introduction-mixed-models.pdf>
+
+- ANOVA and mixed models <https://stat.ethz.ch/~meier/teaching/anova/random-and-mixed-effects-models.html>
+
+- On Best Practice Optimization Methods in R (this paper has some good references about optimizers; it probably isn't relevant to you) <https://www.jstatsoft.org/article/view/v060i02>
+
+## Cross Validated
+
+- How to choose random- and fixed-effects structure in linear mixed models? <https://stats.stackexchange.com/q/130714/337979>
+
+- 
 
 ### R
 
 - R's lmer cheat sheet <https://stats.stackexchange.com/questions/13166/rs-lmer-cheat-sheet>
+- lme4: Mixed-effects modeling with R <https://stat.ethz.ch/~maechler/MEMo-pages/lMMwR.pdf>
+
+### R packages
+
+- equatiomatic <https://datalorax.github.io/equatiomatic/>
