@@ -26,6 +26,7 @@ library(here)
 library(tidyverse)
 library(broom)
 library(lavaan)
+library(tidySEM)
 ```
 
 As well as this Help Yourself's example data:
@@ -48,22 +49,211 @@ The **lavaan** package is the main R package for latent variable analysis, but t
 
 There are some companion packages to lavaan that make certain things even easier, or extend its capabilities. The main one is the **semTools** package, which has tools for SEM (duh). There is also the **tidySEM** package, which provides a tidy framework for working with lavaan models (and has some other helpers). Finally, there are currently two mature packages that are available to make SEM graphs: tidySEM and semPlot. We will use the tidySEM package here. Both packages use the **igraph** package as their backend for creating SEM graphs. The tidySEM package makes it a bit easier to customize graphs though.
 
+There is also the **blavaan** package if you want to take a Bayesian approach to SEM.
+
 The lavaan package has an excellent tutorial available here <https://lavaan.ugent.be/tutorial/index.html>. You should take the time to read it.
+
+## lavaan syntax
+
+The lavaan tutorial describes lavaan syntax in full here <https://lavaan.ugent.be/tutorial/syntax1.html> and here <https://lavaan.ugent.be/tutorial/syntax2.html>. Briefly, the current set of formula types is summarized in the table below.
+
+| formula type               | operator | mnemonic           |
+|----------------------------|----------|--------------------|
+| latent variable definition | =~       | is measured by     |
+| regression                 | ~        | is regressed on    |
+| (residual) (co)variance    | ~~       | is correlated with |
+| intercept                  | ~ 1      | intercept          |
+
+When defining a SEM model you can choose to define every single part (i.e., have full control) or define the main parts of the model and let lavaan handle the rest behind the scenes. Again, see the lavaan tutorial site for details. Here we will let lavaan handle things behind the scenes because it is sufficient for what we are doing.
 
 ## Path analysis
 
+Since SEM models tend to be big, we first define our model before fitting it. In lavaan, models are written as strings. I like to enclose the strings in parentheses, as it allows you to save the object no matter where your cursor is in the string. Aside from the formulas you write for your model, you can also include comments and line breaks within the string---take advantage of this to make your models more readable.
+
+```{r}
+teaching_model <- ("
+  # Regressions
+  good_teaching ~ months_teaching + knowledge 
+  months_teaching ~ knowledge + sensitivity
+  
+  # Correlations
+  knowledge ~~ sensitivity
+")
+```
+
+If we are following a coding style guide (and we should be), we ideally do not want to exceed 80 characters in a line. But if there are a lot of terms for a given regression or latent variable it can be easy to exceed that. The solution is simply to split up the definition over multiple lines. Here we will split the `good_teaching` regression over multiple lines. This model is equivalent to the one above.
+
+```{r}
+teaching_model <- ("
+  # Regressions
+  good_teaching ~ months_teaching 
+  good_teaching ~ knowledge 
+  months_teaching ~ knowledge + sensitivity
+  
+  # Correlations
+  knowledge ~~ sensitivity
+")
+```
+
+Once you have defined your model you can use the `sem()` function (`?lavaan::sem`) from the lavaan package to fit the model.
+
+```{r}
+fit_teaching_model <- lavaan::sem(teaching_model, data = teaching)
+```
+
+Once the model has been fitted, you can use the `summary()` function (`?lavaan::`summary,lavaan-method``) to get a summary of the fitted model.
+
+```{r}
+summary(fit_teaching_model)
+```
+
+This looks bare bones. The `summary()` function has a number of optional arguments to show or hide different summary information. Here are all the options, and their default values: `header = TRUE, fit.measures = FALSE, estimates = TRUE, ci = FALSE, fmi = FALSE, standardized = FALSE, remove.step1 = TRUE, cov.std = TRUE, rsquare = FALSE, std.nox = FALSE, modindices = FALSE, ci = FALSE, nd = 3L`.
+
+Note that when `standardized=TRUE` SEs and tests are still based on unstandardized estimates. Use the `standardizedSolution()` function (`?lavaan::standardizedSolution`) to obtain standardized SEs and test statistics for standardized estimates. This argument simply adds two extra columns of standardized parameter values to the summary: the `Std.lv` column contains estimates when only the latent variables are standardized, and the `Std.all` column contains estimates when both latent and observed variables are standardized.
+
+```{r}
+summary(
+  fit_teaching_model,
+  fit.measures = TRUE,
+  rsquare = TRUE,
+  standardized = TRUE
+)
+```
+
+### Inspecting models
+
+If you need to extract any of the values in the summary for futher processing, lavaan provides a number of helper functions described here <https://lavaan.ugent.be/tutorial/inspect.html>. Some of these can also be useful for diagnostics.
+
+The `parameterEstimates()` function (`?lavaan::parameterEstimates`) returns a data frame containing all the model parameters in the rows.
+
+```{r}
+lavaan::parameterEstimates(fit_teaching_model)
+```
+
+The `standardizedSolution()` function (`?lavaan::standardizedSolution`) returns a data frame containing the standardized model parameters.
+
+```{r}
+lavaan::standardizedSolution(fit_teaching_model)
+```
+
+You can also use the `tidy()` function (`?broom::tidy.lavaan`) from the broom package, which gives unstandardized and standardized model parameters.
+
+```{r}
+broom::tidy(fit_teaching_model, conf.int = TRUE)
+```
+
+The `fitted()` function returns the model-implied (fitted) covariance matrix (and mean vector) of a fitted model.
+
+```{r}
+fitted(fit_teaching_model)
+```
+
+The `lavResiduals()` function (`?lavaan::lavResiduals`) returns esiduals and standardized residuals of a fitted model as well as various summaries of these residuals.
+
+```{r}
+lavaan::lavResiduals(fit_teaching_model)
+```
+
+The `vcov()` function returns the estimated covariance matrix of the parameter estimates.
+
+```{r}
+vcov(fit_teaching_model)
+```
+
+The `fitMeasures()` function (`?lavaan::fitMeasures`) returns either all or a selection of fit measures as a named numeric vector.
+
+```{r}
+# Return all
+lavaan::fitMeasures(fit_teaching_model)
+
+# Return a selection
+lavaan::fitMeasures(
+  fit_teaching_model,
+  fit.measures = c("aic", "bic", "rmsea")
+)
+```
+
+The `glance()` function (`?broom::glance.lavaan`) from the broom package can also be used to return a selection of common fit measures.
+
+```{r}
+broom::glance(fit_teaching_model)
+```
+
+The `lavInspect()` function (`?lavaan::lavInspect`) can be used to inspect/extract information that is stored inside (or can be computed from) a fitted lavaan object. There are a lot of things you can extract; see the help page for more details.
+
+```{r}
+lavaan::lavInspect(fit_teaching_model, what = "free")
+```
 
 ## Latent variable analysis
 
+Latent variable analysis (i.e., SEM) follows the same procedure as path analysis. The only difference is that we also include latent variable definitions in our model.
 
+```{r}
+academics_model <- ("
+  # Latent variable definitions
+  efficacy =~ succeed + intellect + writing
+  commitment =~ reputation + programs + ranking
+  encouragement =~ parents + role + relatives
+  social =~ office + greek + clubs
+  
+  # Regressions
+  commitment ~ efficacy + encouragement
+  social ~ efficacy + encouragement + commitment
+  gpa ~ commitment + social
+  
+  # Correlations
+  efficacy ~~ encouragement
+")
+
+fit_academics_model <- lavaan::sem(academics_model, data = academics)
+
+summary(
+  fit_academics_model,
+  fit.measures = TRUE,
+  rsquare = TRUE,
+  standardized = TRUE
+)
+```
 
 ## Graphs
 
-Plotting graphs for structural equation models <https://cjvanlissa.github.io/tidySEM/articles/Plotting_graphs.html>
+You can use the `graph_sem()` function (`?tidySEM::graph_sem`) from the tidySEM package to graph your lavaan models.
+
+```{r}
+tidySEM::graph_sem(model = fit_academics_model)
+```
+
+As you may have noticed, this graph is not very readable. You have a few options here:
+
+1. Try a different layout algorithm using the `get_layout()` (`?tidySEM::get_layout`) function
+2. Manually specify a layout using the `get_layout()` (`?tidySEM::get_layout`) function
+3. Draw the graph yourself in a different program
+
+For the assignment or during the draft stage of a project, go with the first option. It's the quickest. For final publication, either option two or three are valid if you need fine control, but I would not do either of these until you are 100% certain your project is complete, otherwise you may end up wasting your time. The second option is nice because it ensures your results are reproducible and without error (e.g., from typos), but it's kind of a pain. The third option is probably the easiest if there's a program you are comfortable creating diagrams with. Apple Pages or Keynote, or MS Word or Powerpoint can be perfectly fine for this.
+
+Here's how to change layout algorithms. Available algorithms include: "layout_as_star", "layout_as_tree", "layout_in_circle", "layout_nicely", "layout_on_grid", "layout_randomly", "layout_with_dh", "layout_with_fr", "layout_with_gem", "layout_with_graphopt", "layout_with_kk", "layout_with_lgl", "layout_with_mds". You may want to set a seed with the `set.seed()` function first so you get a consistent result (some of the algorithms are random so you'll get something different each time otherwise).
+
+```{r}
+set.seed(664)
+academics_model_layout <- tidySEM::get_layout(
+  fit_academics_model,
+  layout_algorithm = "layout_nicely"
+)
+
+tidySEM::graph_sem(
+  model = fit_academics_model,
+  layout = academics_model_layout
+)
+```
+
+As far as saving the graph, probably the least painful way would be to click the zoom button in the viewer window, adjust the window until the graph looks the way you want, then right-click and save the image. Then you can display the image in the same way we display any other image in an R Markdown document. Otherwise you can play around with knitr's figure size chunk options.
+
+For more details on graphs and customizing them, see the plotting graphs for structural equation models article for the tidySEM package <https://cjvanlissa.github.io/tidySEM/articles/Plotting_graphs.html>.
 
 ## Follow up tests
 
-You can follow up lavaan models with the **emmeans** package as usual. The support for this is currently located in the semTools package, so you will need to load that first, but otherwise it should just work. The semTools package itself also has tools to follow up lavaan models; Alexander Schoemann and Terrence Jorgensen have an excellent tutorial on Testing and Interpreting Latent Variable Interactions Using the semTools Package <https://doi.org/10.3390/psych3030024>. 
+You can follow up lavaan models with the **emmeans** package as usual. The support for this is currently located in the semTools package, so you will need to load that first, but otherwise it should just work. The semTools package itself also has tools to follow up lavaan models; Alexander Schoemann and Terrence Jorgensen have an excellent tutorial on Testing and Interpreting Latent Variable Interactions Using the semTools Package <https://doi.org/10.3390/psych3030024>.
 
 ## EFA
 
@@ -81,25 +271,21 @@ Michael Clark has a nice comparison of SEM and mixed models if you want to dive 
 
 ## Full circle
 
-Last thing in the course! Hopefully this drives home the point that you shouldn't take a cookbook approach to statistics. You may have been taught that way, but you do not need to think that way. 
+Last thing in the course! Hopefully this drives home the point that you shouldn't take a cookbook approach to statistics. You may have been taught that way, but you do not need to think that way.
 
-
-
-Here's the student's t-test as a structural equation model. 
-
-
+Here's the student's t-test as a structural equation model.
 
 ## Learning more
 
-- Structural equation modelling in perspective <https://onlinelibrary.wiley.com/doi/abs/10.1002/job.4030160304>
-- Jason Newsom's SEM course notes <http://web.pdx.edu/~newsomj/semclass/>
+-   Structural equation modelling in perspective <https://onlinelibrary.wiley.com/doi/abs/10.1002/job.4030160304>
+-   Jason Newsom's SEM course notes <http://web.pdx.edu/~newsomj/semclass/>
 
 ### Cross validation
 
-- Multiple Comparison and Cross-Validation in Evaluating Structural Equation Models <https://link.springer.com/chapter/10.1007/978-3-319-13248-8_83>
-- Alternative Strategies for Cross-Validation of Covariance Structure Models <https://pubmed.ncbi.nlm.nih.gov/26771552/>
+-   Multiple Comparison and Cross-Validation in Evaluating Structural Equation Models <https://link.springer.com/chapter/10.1007/978-3-319-13248-8_83>
+-   Alternative Strategies for Cross-Validation of Covariance Structure Models <https://pubmed.ncbi.nlm.nih.gov/26771552/>
 
 ### R Packages
 
-- [semTools](https://github.com/simsem/semTools/tree/master/semTools)
-- [tidySEM](https://cjvanlissa.github.io/tidySEM/)
+-   [semTools](https://github.com/simsem/semTools/tree/master/semTools)
+-   [tidySEM](https://cjvanlissa.github.io/tidySEM/)
