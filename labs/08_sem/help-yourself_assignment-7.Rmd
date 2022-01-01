@@ -1,0 +1,105 @@
+---
+title: "Help yourself: Assignment 7"
+author:
+  - name: "Michael McCarthy"
+    url: https://github.com/mccarthy-m-g
+    affiliation: "PSYC 617 Lab"
+    affiliation_url: https://github.com/mccarthy-m-g/psyc-617-lab
+repository_url: https://github.com/mccarthy-m-g/psyc-617-lab
+output:
+  distill::distill_article:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = "#>", collapse = TRUE)
+```
+
+## Prerequisites
+
+To access the datasets, help pages, and functions that we will use in this *help yourself*, load the following packages:
+
+```{r prerequisites}
+here::i_am("labs/05_multilevel-modelling/help-yourself_assignment-4.Rmd")
+
+library(here)
+library(tidyverse)
+library(broom)
+library(lavaan)
+```
+
+As well as this Help Yourself's example data:
+
+```{r example-data}
+teaching <- readr::read_csv(
+  here::here("data", "help-yourself_a7_p1.csv"),
+  col_types = "nnnn"
+)
+
+academics <- readr::read_csv(
+  here::here("data", "help-yourself_a7_p2.csv"),
+  col_types = "nnnnnnnnnnnnn"
+)
+```
+
+## Notes on software
+
+The **lavaan** package is the main R package for latent variable analysis, but there are other packages too. It is a commercial quality package, and can also mimic the results of several commercial programs (e.g., Mplus) if you ever need to do that.
+
+There are some companion packages to lavaan that make certain things even easier, or extend its capabilities. The main one is the **semTools** package, which has tools for SEM (duh). There is also the **tidySEM** package, which provides a tidy framework for working with lavaan models (and has some other helpers). Finally, there are currently two mature packages that are available to make SEM graphs: tidySEM and semPlot. We will use the tidySEM package here. Both packages use the **igraph** package as their backend for creating SEM graphs. The tidySEM package makes it a bit easier to customize graphs though.
+
+The lavaan package has an excellent tutorial available here <https://lavaan.ugent.be/tutorial/index.html>. You should take the time to read it.
+
+## Path analysis
+
+
+## Latent variable analysis
+
+
+
+## Graphs
+
+Plotting graphs for structural equation models <https://cjvanlissa.github.io/tidySEM/articles/Plotting_graphs.html>
+
+## Follow up tests
+
+You can follow up lavaan models with the **emmeans** package as usual. The support for this is currently located in the semTools package, so you will need to load that first, but otherwise it should just work. The semTools package itself also has tools to follow up lavaan models; Alexander Schoemann and Terrence Jorgensen have an excellent tutorial on Testing and Interpreting Latent Variable Interactions Using the semTools Package <https://doi.org/10.3390/psych3030024>. 
+
+## EFA
+
+Yes, you can fit an exploratory factor analysis with lavaan <https://solomonkurz.netlify.app/post/2021-05-11-yes-you-can-fit-an-exploratory-factor-analysis-with-lavaan/>
+
+## SEM vs mixed models
+
+Mixed models can be used in a SEM framework too.
+
+```{r}
+
+```
+
+Michael Clark has a nice comparison of SEM and mixed models if you want to dive into this further, and get some thoughts on which approach to take <http://m-clark.github.io/docs/mixedModels/growth_vs_mixed_old.html>. Yves Rosseel, the creator of the lavaan package, also has some excellent lecture notes on multilevel SEM with lavaan <https://users.ugent.be/~yrosseel/lavaan/zurich2020/lavaan_multilevel_zurich2020.pdf>, and the lavaan website has a tutorial <https://lavaan.ugent.be/tutorial/multilevel.html> (note that the lavaan package does not yet support random slopes in multilevel SEM).
+
+## Full circle
+
+Last thing in the course! Hopefully this drives home the point that you shouldn't take a cookbook approach to statistics. You may have been taught that way, but you do not need to think that way. 
+
+
+
+Here's the student's t-test as a structural equation model. 
+
+
+
+## Learning more
+
+- Structural equation modelling in perspective <https://onlinelibrary.wiley.com/doi/abs/10.1002/job.4030160304>
+- Jason Newsom's SEM course notes <http://web.pdx.edu/~newsomj/semclass/>
+
+### Cross validation
+
+- Multiple Comparison and Cross-Validation in Evaluating Structural Equation Models <https://link.springer.com/chapter/10.1007/978-3-319-13248-8_83>
+- Alternative Strategies for Cross-Validation of Covariance Structure Models <https://pubmed.ncbi.nlm.nih.gov/26771552/>
+
+### R Packages
+
+- [semTools](https://github.com/simsem/semTools/tree/master/semTools)
+- [tidySEM](https://cjvanlissa.github.io/tidySEM/)
