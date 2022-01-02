@@ -216,6 +216,22 @@ summary(
 )
 ```
 
+## Model identification
+
+There are three approaches to achieving identification with SEM. For a brief overview see "A Non-arbitrary Method of Identifying and Scaling Latent Variables in SEM and MACS Models" <https://www.tandfonline.com/doi/abs/10.1207/s15328007sem1301_3>.
+
+- Marker-Variable Method: the intercept of one of the indicators of each construct is fixed to be 0 and the loading of the chosen indicator is fixed to be 1.
+- Reference-Group Method: the latent variance of each latent variable in the first group or at the first occasion is fixed to 1 and the latent mean is fixed to 0.
+- Effects-Coding Method: the set of indicator intercepts are constrained to sum to zero for each construct and the set of loadings for a given construct to average 1 (this is analogous to analysis of variance effects coding)
+
+In the example above we used the marker-variable method, with the first indicator in each latent variable definition being the one we fixed. This is the default identification behaviour in lavaan.
+
+If you want to use the reference-group method, the `sem()` function has an optional `std.lv` argument that will fit your model with  the reference-group method when set to `TRUE`. Note that if a latent variable in your model is a dependent variable then the residual variance will be fixed to 1, which will have an impact on various estimates. You can always manually specify how variables are fixed in your model if you need more control in situations such as this.
+
+If you want to use the effects-coding method you will have to specify it manually in your model.
+
+Note that if you are specifying the finer details of your model manually, and want to be certain everything is exactly as you intend, you may prefer to use the `lavaan()` function (`?lavaan::lavaan`) instead of the `sem()` function. The `sem()` function is simply a wrapper for the more general `lavaan()` function with a number of default options set up. The `lavaan()` function on the other hand has no default options, so you have to be explicit about every part of your model in order to fit it.
+
 ## Graphs
 
 You can use the `graph_sem()` function (`?tidySEM::graph_sem`) from the tidySEM package to graph your lavaan models.
@@ -255,35 +271,173 @@ For more details on graphs and customizing them, see the plotting graphs for str
 
 You can follow up lavaan models with the **emmeans** package as usual. The support for this is currently located in the semTools package, so you will need to load that first, but otherwise it should just work. The semTools package itself also has tools to follow up lavaan models; Alexander Schoemann and Terrence Jorgensen have an excellent tutorial on Testing and Interpreting Latent Variable Interactions Using the semTools Package <https://doi.org/10.3390/psych3030024>.
 
-## EFA
+## Ordinal indicators
+
+If your indicators are ordinal rather than continuous, it is probably a good idea to treat them as such. Coding ordinal data as if it is continuous is possible (e.g., you could rank people's heights from tallest to shortest, and then treat each person's rank as a continuous number); however, because we do not have information about the underlying continuous phenomenon, there is no guarantee that the coding rule used for each rank will correspond to the magnitude of change occurring in the underlying continuous phenomenon were we to analyze them as metric.
+
+In the height example, if we chose ranks of 1, 2, 3, 4, and so on, and then treated those ranks as a continuous metric, it's likely our model would be biased. Here we would be assuming the difference in height from rank to rank is equal between all people in our sample. This is obviously nonsense. The difference in height from rank to rank is going to vary. So, if we did this, it would lead to biased estimates. And the size of the differences in numeric scores will largely be an artifact of our coding rule. If we chose a different coding rule we would obtain different results, biased in their own way.
+
+Here it is important to note that common methods of measurement in psychology, such as *Likert scales*, are likely best treated as ordinal.
+
+Fortunately lavaan makes it easy to work with ordinal data. The optional `ordered` argument can be used to tell lavaan which variables in your data should be treated as ordinal. If all your endogenous variables are ordinal you can also set it to `TRUE` and then all of them will be treated as such. This will use diagonally weighted least squares with polychoric correlations as your estimation method, rather than maximum likelihood, which tends to be more accurate when you have ordinal variables (which by their very nature will violate multivariate normality, and thus a key assumption of maximum likelihood estimation).
+
+Here are a couple papers as a jumping off point. Some of the books in the learning more section also dicuss these issues.
+
+- The performance of ML, DWLS, and ULS estimation with robust corrections in structural equation models with ordinal variables <https://pubmed.ncbi.nlm.nih.gov/27571021/>
+- Factor Analysis with Ordinal Indicators: A Monte Carlo Study Comparing DWLS and ULS Estimation <https://www.tandfonline.com/doi/abs/10.1080/10705510903203573?journalCode=hsem20>
+
+And here are two excellent papers about considerations when working with ordinal data more generally.
+
+- Levels of measurement and statistical analyses <https://open.lnu.se/index.php/metapsychology/article/view/1916>
+- Analyzing Ordinal Data with Metric Models: What Could Possibly Go Wrong? <https://papers.ssrn.com/abstract=2692323>
+
+## SEM vs. EFA
 
 Yes, you can fit an exploratory factor analysis with lavaan <https://solomonkurz.netlify.app/post/2021-05-11-yes-you-can-fit-an-exploratory-factor-analysis-with-lavaan/>
 
 ## SEM vs mixed models
 
-Mixed models can be used in a SEM framework too.
+Mixed models can be used in a SEM framework too. Here's a demonstration using the data from the mixed models lab.
 
 ```{r}
+sales <- readr::read_csv(
+  here::here("data", "help-yourself_a4.csv"),
+  col_types = "fnfnfn"
+)
+```
 
+Currently lavaan only supports two level models with random intercepts with continuous data. It should support more flexible models in the future. The main point here is just to show that mixed models can be thought of as a special case of SEM.
+
+First with the lme4 package.
+
+```{r}
+sales_mixed_model_lme4 <- lme4::lmer(
+  sales ~ years_experience + dealership_awards + (1 | dealership),
+  data = sales
+)
+
+summary(sales_mixed_model_lme4)
+```
+
+Then with the lavaan package. There are some minor differences in the estimates, but they are the same by any practical measure.
+
+```{r}
+sales_mixed_model_lavaan <- ("
+  Level: 1
+      sales ~ years_experience
+  Level: 2
+      sales ~ dealership_awards
+")
+
+fit_sales_mixed_model_lavaan <- lavaan::sem(
+  sales_mixed_model_lavaan,
+  data = sales,
+  cluster = "dealership"
+)
+
+summary(fit_sales_mixed_model_lavaan)
 ```
 
 Michael Clark has a nice comparison of SEM and mixed models if you want to dive into this further, and get some thoughts on which approach to take <http://m-clark.github.io/docs/mixedModels/growth_vs_mixed_old.html>. Yves Rosseel, the creator of the lavaan package, also has some excellent lecture notes on multilevel SEM with lavaan <https://users.ugent.be/~yrosseel/lavaan/zurich2020/lavaan_multilevel_zurich2020.pdf>, and the lavaan website has a tutorial <https://lavaan.ugent.be/tutorial/multilevel.html> (note that the lavaan package does not yet support random slopes in multilevel SEM).
 
+And here are some papers:
+
+- Have multilevel models been structural equation models all along? <https://pubmed.ncbi.nlm.nih.gov/26777445/>
+- Estimating Multilevel Linear Models as Structural Equation Models. <https://journals.sagepub.com/doi/10.3102/10769986028002135>
+- People are variables too: Multilevel structural equations modeling. <https://pubmed.ncbi.nlm.nih.gov/16221028/>
+
+This is quite cool, I think, as it ties nearly everything you have learned in PSYC 615 and 617 under a single modelling framework. The other reason it's cool is that it means you can do things like multilevel exploratory or confirmatory factor analysis, or multilevel SEM. Here's a paper that discusses this:
+
+- Using Multilevel Factor Analysis With Clustered Data: Investigating the Factor Structure of the Positive Values Scale <https://journals.sagepub.com/doi/pdf/10.1177/0734282915570278>
+
 ## Full circle
 
-Last thing in the course! Hopefully this drives home the point that you shouldn't take a cookbook approach to statistics. You may have been taught that way, but you do not need to think that way.
+Last thing in the course! Hopefully this drives home the point that you shouldn't take a cookbook approach to statistics. You may have been taught that way, but you do not need to think that way. We're going to use the very first data set you did a student's t-test on in PSYC 615 for this one, but we're now going to do the t-test as a structural equation model. This answer about using SEM to run one-way and two-way ANOVAs on Cross Validated makes a good reference for the various ways to do this <https://stats.stackexchange.com/a/453558/337979>.
 
-Here's the student's t-test as a structural equation model.
+```{r}
+spiders <- readr::read_csv(
+  here::here("data", "help-yourself_psyc-615_a1.csv"),
+  col_types = "ffn"
+) 
+```
+
+Here's the student's t-test.
+
+```{r}
+t.test(anxiety ~ group, var.equal = TRUE, data = spiders)
+```
+
+Here's the student's t-test as a structural equation model. There are two ways to go about this. First, we could simply do a regression with lavaan.
+
+```{r}
+spiders_model <- ("
+  anxiety ~ group
+")
+
+fit_spiders_model <- lavaan::sem(
+  spiders_model,
+  data = spiders
+)
+
+summary(fit_spiders_model)
+```
+
+Second, we could test for measurement invariance between the two groups. Here it's less obvious since the estimates and test statistics aren't the same, but we're answering a similar question.
+
+```{r}
+spiders_model <- ("
+  anxiety ~ 1
+")
+
+fit_spiders_model_free <- lavaan::sem(
+  spiders_model,
+  data = spiders,
+  group = "group"
+)
+
+summary(fit_spiders_model_fixed)
+fit_spiders_model_fixed <- lavaan::sem(
+  spiders_model,
+  data = spiders,
+  group = "group",
+  group.equal = "intercepts"
+)
+
+lavaan::lavTestLRT(fit_spiders_model_free, fit_spiders_model_fixed)
+```
 
 ## Learning more
 
--   Structural equation modelling in perspective <https://onlinelibrary.wiley.com/doi/abs/10.1002/job.4030160304>
--   Jason Newsom's SEM course notes <http://web.pdx.edu/~newsomj/semclass/>
+### SEM
+
+- Principles and Practice of Structural Equation Modeling (Kline) <https://www.guilford.com/books/Principles-and-Practice-of-Structural-Equation-Modeling/Rex-Kline/9781462523344>
+- Structural equation models and the quantification of behavior <https://www.pnas.org/content/108/Supplement_3/15639>
+- Structural equation modelling in perspective <https://onlinelibrary.wiley.com/doi/abs/10.1002/job.4030160304>
+- Jason Newsom's SEM course notes <http://web.pdx.edu/~newsomj/semclass/>
+- David Kenny's SEM notes <http://davidakenny.net/cm/causalm.htm>
+
+- Thinking Twice About Sum Scores <https://psyarxiv.com/3wy47/>
+
+### Longitudinal SEM
+
+- Longitudinal Structural Equation Modeling (Little) <https://www.guilford.com/books/Longitudinal-Structural-Equation-Modeling/Todd-Little/9781462510160>
+- Longitudinal Structural Equation Modeling: A Comprehensive Introduction (Newsom) <https://www.routledge.com/Longitudinal-Structural-Equation-Modeling-A-Comprehensive-Introduction/Newsom/p/book/9781848726970>
+
+Note: These books are good references even if you aren't doing longitudinal analysis
+
+### Model identification
+
+- Testing parameters in structural equation modeling: every "one" matters <https://pubmed.ncbi.nlm.nih.gov/11570231/>
+- When constraints interact: a caution about reference variables, identification constraints, and scale dependencies in structural equation modeling <https://pubmed.ncbi.nlm.nih.gov/12090411/>
 
 ### Cross validation
 
 -   Multiple Comparison and Cross-Validation in Evaluating Structural Equation Models <https://link.springer.com/chapter/10.1007/978-3-319-13248-8_83>
 -   Alternative Strategies for Cross-Validation of Covariance Structure Models <https://pubmed.ncbi.nlm.nih.gov/26771552/>
+
+### Cross Validated
+
+- Whether to use structural equation modelling to analyse observational studies in psychology <https://stats.stackexchange.com/a/187406/337979>
 
 ### R Packages
 
