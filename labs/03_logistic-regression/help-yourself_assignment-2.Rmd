@@ -1,0 +1,154 @@
+---
+title: "Help yourself: Assignment 2"
+author:
+  - name: "Michael McCarthy"
+    url: https://github.com/mccarthy-m-g
+    affiliation: "PSYC 617 Lab"
+    affiliation_url: https://github.com/mccarthy-m-g/psyc-617-lab
+repository_url: https://github.com/mccarthy-m-g/psyc-617-lab
+output:
+  distill::distill_article:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = "#>", collapse = TRUE)
+```
+
+## Prerequisites
+
+To access the datasets, help pages, and functions that we will use in this *help yourself*, load the following packages:
+
+```{r prerequisites}
+here::i_am("labs/03_logistic-regression/help-yourself_assignment-2.Rmd")
+
+library(here)
+library(tidyverse)
+library(broom)
+library(performance)
+```
+
+As well as this Help Yourself's example data:
+
+```{r example-data}
+applicants <- readr::read_csv(
+  here::here("data", "help-yourself_a2.csv"),
+  col_types = "fnnnnn"
+) %>% 
+  mutate(dplyr::across(accepted, ~ forcats::fct_relevel(.x, "no")))
+```
+
+## Binary logistic regression
+
+Logistic regression is an example of a broad class of models known as generalized linear models (GLMs). Appropriately, you can fit a logistic regression model using the `glm()` function (`?glm`) with a binomial error distribution and a logit model link function (note: in a similar way, linear regression is a generalized linear model with a Gaussian error distribution and an identity model link function).
+
+```{r}
+applicants_model <- glm(
+  accepted ~ verbal_reasoning + biological_sciences + physical_sciences,
+  data = applicants,
+  family = binomial(link = "logit")
+)
+```
+
+You can then inspect the fitted model using the usual `summary()` function and functions from the **broom** package.
+
+```{r}
+summary(applicants_model)
+```
+
+And you can compare models using the usual `anova()` function.
+
+## Quantifying Predictive Ability
+
+### Log loss
+
+You can get the log loss using the `performance_logloss()` function (`?performance::performance_logloss`) from the performance package. High values indicate bad predictions, while low values indicate good predictions. The lower the log-loss, the better the model predicts the outcome.
+
+```{r}
+performance::performance_logloss(applicants_model)
+```
+
+### Brier score (aka mean square error)
+
+You can get the brier score (which is just the mean square error) using the `performance_score()` function (`?performance::performance_score`) from the performance package. It's the one labelled "quadratic" in the output. Smaller values indicate superior performance (so you could use this for model comparisons).
+
+```{r}
+performance::performance_score(applicants_model)
+```
+
+### c-index (aka area under the ROC curve)
+
+A value of c of .5 indicates random predictions, and a value of 1 indicates perfect prediction (i.e., perfect separation of class A and B). A model having c greater than roughly .8 has some utility in predicting the responses of individual subjects.
+
+```{r}
+performance::performance_roc(applicants_model)
+```
+
+### Error rate
+
+This description is taken from Gelman and Hill: The error rate is defined as the proportion of cases for which the deterministic prediction is wrong, i.e. the proportion where the predicted probability is above 0.5, although y = 0 (and vice versa). The error rate should always be less than 1/2 (otherwise we could simply set all the coefficients to 0 and get a better-fitting model), but in many cases we would expect it to be much lower. The error rate is not a perfect summary of model misfit, because it does not distinguish between predictions of 0.6 and 0.9, for example. But it is easy to interpret and is often helpful in understanding the model fit. An error rate equal to the null rate is terrible, and the best possible erro: rate is zero.
+
+As we can see here, our model is terrible according to the error rate, which we get using the `performance_pcp()` function (`?performance::performance_pcp`). This function also returns the likelihood ratio test between the fitted and null model, which indicates whether the model has a significantly better fit than the null-model (in such cases, p < 0.05). Apparently it fits the data better, but it still sucks.
+
+```{r}
+performance::performance_pcp(applicants_model, method = "Gelman-Hill")
+```
+
+### Classification accuracy
+
+DO NOT USE THIS IT'S BAD. See page 258 in Regression Modeling Strategies by Frank Harrell for a good discussion, as well as some of the learning more links below. This measure works by choosing a cutoff point on the predicted probability of a positive response---predicted probabilities that exceed this cutoff will be classified as positive, and predicted probabilities that do exceed this cutoff will be classified as negative on the binary response variable. In other words, this approach turns probabilities into a simple "yes" or "no". Remember how you lose information when you dichotomize a continuous variable? Well this method does precisely that, and there's no good reason to.
+
+Okay, now to demonstrate in case this isn't clear enough. We can get the predicted probabilities for each observation from our fitted model like so.
+
+```{r}
+applicants_model %>% 
+  broom::augment(type.predict = "response") %>% 
+  dplyr::select(accepted, .fitted) %>% 
+  dplyr::arrange(desc(.fitted))
+```
+
+These are already incredibly useful. You could stop here. Any further classification has nothing to do with statistics.
+
+Here's a confusion matrix that you might use to assess classification accuracy (but again DON'T). It's called a confusion matrix because it is confusing. Notice two things here: first, we are dichotomizing our probabilities; second, we have to choose a cutoff point to dichotomize on. What point do we pick? If we're lazy we pick 0.5, but doing that means we value the risk of Type 1 and 2 error equally. And we probably don't.
+
+```{r}
+applicants_model %>% 
+  broom::augment(type.predict = "response") %>% 
+  mutate(.fitted = if_else(.fitted >= .5, "yes", "no")) %>% 
+  yardstick::conf_mat(truth = accepted, estimate = .fitted)
+```
+
+According to the table we have 994 true negative cases and 2 true positive cases, and 198 false negative cases and 6 false positive cases, if we were to dichotomize based on a cutoff of .5. 
+
+Now try a different cut point, say .4. Notice how things change quite a bit because of an arbitrary decision on our part. Which is better? (trick question, they're both bad metrics). Again, see page 258 in Regression Modeling Strategies by Frank Harrell for a good discussion, as well as some of the learning more links below.
+
+### Cross validation
+
+If you actually want to quantify predictive ability you could see how well your fitted model predicts new data. This can also be thought of as a way to validate your model.
+
+
+
+## Learning more
+
+### Logistic regression is not a classification method
+
+- Why isn't Logistic Regression called Logistic Classification?
+ <https://stats.stackexchange.com/a/127044/337979>
+- Classification vs. Prediction (Frank Harrell) <https://www.fharrell.com/post/classification/>
+- Why Do So Many Practicing Data Scientists Not Understand Logistic Regression? <https://ryxcommar.com/2020/06/27/why-do-so-many-practicing-data-scientists-not-understand-logistic-regression/amp/>
+
+### Scoring rules
+
+- Choosing a Strictly Proper Scoring Rule <https://pubsonline.informs.org/doi/abs/10.1287/deca.2013.0280>
+- Why is LogLoss preferred over other proper scoring rules? <https://stats.stackexchange.com/a/493949/337979>
+- How can proper scoring rules optimize the probabilistic prediction compared to improper scoring rules? <https://stats.stackexchange.com/q/478652/337979>
+- Is accuracy an improper scoring rule in a binary classification setting? <https://stats.stackexchange.com/a/359936/337979>
+- Damage Caused by Classification Accuracy and Other Discontinuous Improper Accuracy Scoring Rules (Frank Harrell) <https://www.fharrell.com/post/class-damage/>
+- Clinicians' Misunderstanding of Probabilities Makes Them Like Backwards Probabilities Such As Sensitivity, Specificity, and Type I Error <https://www.fharrell.com/post/backwards-probs/>
+
+### Cross validated
+
+- What is the significance of logistic regression coefficients? (the answer here is great, you should take it seriously) <https://stats.stackexchange.com/a/8131/337979>
+- Which pseudo-R-squared measure is the one to report for logistic regression (Cox & Snell or Nagelkerke)? <https://stats.stackexchange.com/a/3562/337979>
+- Diagnostics for logistic regression? <https://stats.stackexchange.com/q/45050/337979>
+
