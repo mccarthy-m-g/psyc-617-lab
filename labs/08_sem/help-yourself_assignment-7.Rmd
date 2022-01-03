@@ -415,8 +415,7 @@ lavaan::lavTestLRT(fit_spiders_model_free, fit_spiders_model_fixed)
 - Structural equation modelling in perspective <https://onlinelibrary.wiley.com/doi/abs/10.1002/job.4030160304>
 - Jason Newsom's SEM course notes <http://web.pdx.edu/~newsomj/semclass/>
 - David Kenny's SEM notes <http://davidakenny.net/cm/causalm.htm>
-
-- Thinking Twice About Sum Scores <https://psyarxiv.com/3wy47/>
+- Jon Lefcheck's SEM book <https://jslefche.github.io/sem_book/index.html>
 
 ### Longitudinal SEM
 
@@ -435,9 +434,21 @@ Note: These books are good references even if you aren't doing longitudinal anal
 -   Multiple Comparison and Cross-Validation in Evaluating Structural Equation Models <https://link.springer.com/chapter/10.1007/978-3-319-13248-8_83>
 -   Alternative Strategies for Cross-Validation of Covariance Structure Models <https://pubmed.ncbi.nlm.nih.gov/26771552/>
 
+### Correlation
+
+- Introduction to the Tetrachoric and Polychoric Correlation Coefficients <http://www.john-uebersax.com/stat/tetra.htm>
+
+### Thinking critically
+
+- Thinking Twice About Sum Scores <https://psyarxiv.com/3wy47/>
+- Measuring the Mind: Conceptual Issues in Contemporary Psychometrics <https://doi.org/10.1017/CBO9780511490026>
+- Multiplicity Control in Structural Equation Modeling <https://www.tandfonline.com/doi/abs/10.1080/10705510709336738?journalCode=hsem20>
+- The Myth of Global Fit Indices and Alternatives for Assessing Latent Variable Relations <https://doi.org/10.1177%2F1094428110391472>
+
 ### Cross Validated
 
 - Whether to use structural equation modelling to analyse observational studies in psychology <https://stats.stackexchange.com/a/187406/337979>
+- Using SEM to run one-way and two-way ANOVAs <https://stats.stackexchange.com/a/453558/337979>
 
 ### R Packages
 
