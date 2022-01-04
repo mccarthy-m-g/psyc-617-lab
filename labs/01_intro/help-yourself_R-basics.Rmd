@@ -1,0 +1,511 @@
+---
+title: "Help yourself: R basics"
+author:
+  - name: "Michael McCarthy"
+    url: https://github.com/mccarthy-m-g
+    affiliation: "PSYC 615 Lab"
+    affiliation_url: https://github.com/mccarthy-m-g/psyc-615-lab
+repository_url: https://github.com/mccarthy-m-g/psyc-615-lab
+output:
+  distill::distill_article:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = "#>", collapse = TRUE)
+```
+
+## Prerequisites
+
+To access the datasets, help pages, and functions that we will use in this *help yourself*, load the following packages:
+
+```{r prerequisites}
+here::i_am("labs/01_intro/help-yourself_assignment-R-basics.Rmd")
+
+library(here)
+library(tidyverse)
+library(ggpubr)
+library(patchwork)
+library(papaja)
+library(psych)
+library(broom)
+library(car)
+library(datawizard)
+library(effectsize)
+library(janitor)
+```
+
+If you run this code and get the error message "there is no package called 'tidyverse'" (or a different package name), you will need to first install it, then run `library()` once again.
+
+```{r, eval=FALSE}
+install.packages("tidyverse")
+library(tidyverse)
+```
+
+You only need to install a package once, but you need to reload it every time you start a new session.
+
+If you need to be explicit about where a function (or dataset) comes from, you can use the special form `package::function()`. For example, `ggplot2::ggplot()` tells R explicitly that you are using the `ggplot()` function from the **ggplot2** package.
+
+Telling R explicitly where a function comes from is called *namespacing*. The code below will always be explicit about where functions from loaded packages come from so that it is easier for you to help yourself when you want to learn more about a given function. However, you do not need to namespace functions in your code for assignments so long as you have the prerequisite packages loaded in your session.
+
+## You've got this!
+
+Getting good at programming will take some time, and the learning curve is often steep at first, but we know you can do it! Stick with it---you'll be thankful you did in the future, even if you don't think so now.
+
+```{r aRt-by-allison-horst}
+knitr::include_graphics(here("images", "help-yourself-01_r-first-then.png"))
+```
+
+When you run into errors: try stuff out, search for help online, ask your peers, or find examples of code to copy (such as from these Help Yourselves). And check for typos. Always check for typos... If you're still stuck after that then reach out to the TAs. We want you to succeed!
+
+## Creating data sets
+
+There are many ways to create data sets in R. If you want to create a data set where the code is laid out like a spreadsheet you can use the `tribble()` function from the **tibble** package. This is useful if you want to create a small data set with values you input manually. To get help using this function you can run `?tibble::tribble` in the R console.
+
+```{r tribble}
+simpsons <- tibble::tribble(
+  ~simpson, ~age,
+  "homer",  36,
+  "marge",  34,
+  "bart",   10,
+  "lisa",    8,
+  "maggie",  1
+)
+
+simpsons
+```
+
+Alternatively, if you want to create a data set where each column is a vector of values you can use the `tibble()` function from the tibble package. To get help using this function you can run `?tibble::tibble` in the R console.
+
+```{r tibble}
+# Here we recreate the data set from the code chunk above using the tibble
+# function
+simpson_name <- c("homer", "marge", "bart", "lisa", "maggie")
+simpson_age  <- c(36, 34, 10, 8, 1)
+
+simpsons <- tibble::tibble(simpson = simpson_name, age = simpson_age)
+
+simpsons
+```
+
+### Simulating data
+
+Creating data sets using the `tibble()` function is useful when you want to simulate data instead of entering it manually. R comes built in with a number of functions to simulate data with different distributions. You can see them all by running `?distributions` in the console. The most useful distribution to simulate in this course will be the normal distribution, which can be simulated with the `rnorm()` function. To get help using this function you can run `?rnorm` in the R console.
+
+```{r simulate}
+set.seed(42)
+normal_distribution <- rnorm(n = 10, mean = 30, sd = 5)
+
+normal_distribution
+```
+
+All the simulation functions in R output vectors of values, which means you can use them with the `tibble()` function to create simulated data sets.
+
+```{r simulated-dataset}
+# Here we construct a data set using the simulated normal distribution from the
+# code chunk above, with an additional column containing the participant ID for
+# each simulated value
+simulated_dataset <- tibble::tibble(id = 1:10, value = normal_distribution)
+
+simulated_dataset
+```
+
+And a little extra trick, square rooting or squaring all the values of a normal distribution can be a quick and dirty way to skew the distribution.
+
+## Wrangling data
+
+It is often the case that the data you work with needs wrangling to make it fit for use. This could mean cleaning the data, but it could also mean adding new columns, removing rows, calculating new values, or transforming old values. The **dplyr** package has you covered for all of these actions and more. There are six main functions that will cover the majority of your data wrangling needs:
+
+### Selecting
+
+The `select()` function (`?dplyr::select`) allows you to select (and optionally rename) columns in a data frame.
+
+```{r select}
+dplyr::select(.data = simpsons, age)
+```
+
+### Filtering
+
+The `filter()` function (`?dplyr::filter`) is used to subset a data frame, retaining all rows that satisfy your conditions.
+
+```{r filter}
+dplyr::filter(.data = simpsons, simpson != "bart" & simpson != "lisa")
+```
+
+### Mutating
+
+The `mutate()` function (`?dplyr::mutate`) adds new columns and preserves existing ones. This function might be useful if you need to use the difference between two values for testing any statistical assumptions for a certain type of t-test (yes, this is an assignment question hint).
+
+```{r mutate}
+dplyr::mutate(.data = simpsons, age_in_2021 = age + 34)
+```
+
+### Grouping and summarizing
+
+The `group_by()` function (`?dplyr::group_by`) allows you to organize observations into groups and do data operations by group. The `ungroup()` function (`?dplyr::ungroup`) removes grouping.
+
+The `summarize()` function (`?dplyr::summarize`) allows you to compute summary statistics on a data set either as a whole or by group by pairing it with the `group_by()` function.
+
+```{r groupby-summarize}
+# First we need a variable to group by. We can create it using the mutate
+# function.
+simpsons <- dplyr::mutate(
+  .data = simpsons,
+  sex = c("male", "female", "male", "female", "female"),
+  .before = age
+)
+
+# Then we group the data by sex
+simpsons_grouped <- dplyr::group_by(.data = simpsons, sex)
+
+# And finally we calculate some summary statistics using our grouping variable
+simpsons_grouped <- dplyr::summarize(
+  .data = simpsons_grouped,
+  group_size = dplyr::n(),
+  mean_age = mean(age),
+  sd_age = sd(age)
+)
+
+simpsons_grouped
+```
+
+The `summarize()` function can also be used independently to get summary statistics for the whole sample.
+
+```{r summarize}
+dplyr::summarize(
+  .data = simpsons,
+  total_age = sum(age),
+  median_age = median(age),
+  mean_age = mean(age),
+  sd_age = sd(age)
+)
+```
+
+### Arranging
+
+The `arrange()` function (`?dplyr::arrange`) orders the rows of a data frame by the values of selected columns.
+
+```{r arrange-ascending}
+dplyr::arrange(.data = simpsons, age)
+```
+
+You can use the the `desc()` function (`?dplyr::desc`) to order the rows in descending order.
+
+```{r arrange-descending}
+dplyr::arrange(.data = simpsons, dplyr::desc(age))
+```
+
+### Pivoting
+
+The `pivot_longer()` function (`?tidyr::pivot_longer`) from the **tidyr** package
+
+```{r pivot-longer}
+# This is the same `mutate()` code as above. Here we are saving it as an object
+# so that we have meaningful data to pivot the data frame from. Note: After
+# mutating, you may notice similarities between how the data frame looks here
+# and in your assignment.
+simpsons <- dplyr::mutate(.data = simpsons, age_in_2021 = age + 34)
+
+simpsons_long <- tidyr::pivot_longer(
+  simpsons,
+  cols = c(age, age_in_2021),
+  names_to = "context",
+  values_to = "age"
+)
+
+simpsons_long
+```
+
+The inverse transformation is the `pivot_wider()` function (`?tidyr::pivot_wider`), also from the **tidyr** package, which "widens" data, increasing the number of columns and decreasing the number of rows. Here we return the long version of our example data back to its previous state.
+
+```{r pivot-wider}
+tidyr::pivot_wider(simpsons_long, names_from = context, values_from = age)
+```
+
+Pivoting data frames can be useful either as a method of tidying up a data frame, or for making certain data transformations easier to do (as you might need to do for the assignment when calculating adjusted means).
+
+## File paths
+
+Before you can read data you need to tell R where the data file is located. There are several ways to do this, some of them better than others.
+
+The easiest---but also easiest to break---way is to write a character string with a path to the file, relative to your current working directory. You can check your current working directory by running `getwd()` in the console. If you do this, you should see that your current working directory is the `psyc-615-lab` directory
+
+```{r string-path}
+string_path <- "data/help-yourself_01.csv"
+string_path
+```
+
+A better way is to use the `file.path()` function (`?file.path`), which constructs the path to a file from components in a platform-independent way. This avoids file paths breaking between different operating systems, since Windows uses backslashes and OSX and Linux use forward slashes.
+
+```{r function-path}
+function_path <- file.path("data", "help-yourself_01.csv")
+function_path
+```
+
+The best way is to use the `here()` function (`?here::here`) from the **here** package. The `here()` function will always locate the files relative to your project root, in this case the `psyc-615-lab` directory. This is more consistent than locating files relative to your current working directory, and encourages the use of [project-oriented workflows](https://r4ds.had.co.nz/workflow-projects.html). You can use it as a drop-in replacement for `file.path()`.
+
+```{r here-path}
+here_path <- here::here("data", "help-yourself_01.csv")
+here_path
+```
+
+You should read the here package vignettes to learn more about using `here()` in general (`vignette("here", package = "here")`) and in R Markdown documents such as this one (`vignette("rmarkdown", package = "here")`). After reading, if you scroll to line 15 of this document you will note that the `here::i_am()` function has already been set up for you. But you may need to set it up on your own at other points in this course.
+
+## Reading data
+
+There are a number of functions you can use to read different data files in R. For this course there are only two you need to worry about. To read CSV data files you can use the `read_csv()` (`?readr::read_csv`) function from the **readr** package.
+
+```{r read-csv}
+spiders <- readr::read_csv(here::here("data", "help-yourself_a1.csv"))
+spiders
+```
+
+To read SPSS `.sav` files you can use the `read_sav()` function (`?haven::read_sav`) from the **haven** package.
+
+```{r read-spss}
+spiders_sav <- haven::read_sav(here::here("data", "help-yourself_a1.sav"))
+spiders_sav
+```
+
+### Viewing data sets
+
+There are a few ways to view data in R after you have imported it. If you just want to get a quick glimpse of the data you can use the `head()` or `tail()` functions (`?head`) to see the first or last 6 observations.
+
+```{r head}
+tail(spiders)
+```
+
+If you want to view the entire data frame you can either click on the object it belongs to in the Environment pane in RStudio, or you can use the `View()` function (`?View`).
+
+```{r view, eval=FALSE}
+View(spiders)
+```
+
+Important note: By default the output of data sets and statistical tests is rounded when you output it in the R console. When the data is viewed in the RStudio viewer called by the `View()` function the output will not be rounded. In other words, output in the console is good for glancing at your data and test output, but the RStudio viewer contains the version of record. Keep this in mind when completing your assignments.
+
+If you do want to see more digits printed in the console [you can change this](https://pillar.r-lib.org/reference/pillar_options.html) (and other printing methods).
+
+## Visualizing data
+
+R is a powerhouse for visualizing data, and makes it easy to create publication ready plots and tables.
+
+### Creating plots
+
+The plots you will make in this course will be simple, but if you enjoy data visualization then diving deeper into R's plotting capabilities is a great investment (check out the *\#tidytuesday* tag on Twitter if you want a taste). Data visualization in R is typically done with the **ggplot2** package, which is based on a grammar of graphics that allows you to assemble plots step by step to your exact specifications. A companion to ggplot2 is the **ggpubr** package, which simplifies the creation of plots common to scientific publications in APA style.
+
+#### Histograms and box plots
+
+Histograms are useful for visualizing the distribution of observations for a given variable. The `gghistogram()` function (`?ggpubr::gghistogram`) can be used to create a histogram. You can change the number and width of bins with the optional `bins` and `binwidth` arguments.
+
+```{r gghistogram}
+ggpubr::gghistogram(data = spiders, x = "anxiety")
+```
+
+An alternative way to visualize the distribution of observations for a given variable is with boxplots. This can be useful if you want to emphasize different percentiles of the data. The `ggboxplot()` function (`?ggpubr::ggboxplot`) can be used to create a box plot.
+
+```{r ggboxplot}
+ggpubr::ggboxplot(data = spiders, y = "anxiety")
+```
+
+#### Q-Q plots
+
+Quantile-Quantile plots are a useful visual aid for assessing whether the distribution of observations for a given variable approximate a theoretical distribution, such as a the normal distribution. The `ggqqplot()` function (`?ggpubr::ggqqplot`) can be used to create a Q-Q plot.
+
+```{r ggqqplot}
+ggpubr::ggqqplot(data = spiders, x = "anxiety")
+```
+
+#### Bar plots and line plots
+
+Bar plots can be used to visualize group differences. The `ggbarplot()` function (`?ggpubr::ggbarplot`) can be used to create a bar plot. The optional `add` argument can be used to add descriptive statistics to the bars, such as means and confidence intervals.
+
+```{r ggbarplot}
+ggpubr::ggbarplot(data = spiders, x = "group", y = "anxiety", add = "mean_ci")
+```
+
+An alternative to bar plots are line plots. These can be useful when visualizing changes in repeated measures data.
+
+```{r ggline}
+ggpubr::ggline(data = spiders, x = "group", y = "anxiety", add = "mean_ci")
+```
+
+You can also plot bar and line plots with adjusted means using subject-centring (which might be useful on the assignment, hint hint). This requires some manual calculations prior to plotting.
+
+```{r manual-adjusted-mean}
+# Here we will modify our example data to reflect a paired design before
+# demonstrating the steps for calculating and plotting adjusted means
+spiders_paired <- dplyr::mutate(spiders, case = rep(1:12, times = 2))
+spiders_paired <- tidyr::pivot_wider(
+  spiders_paired, names_from = group, values_from = anxiety
+)
+spiders_paired <- janitor::clean_names(spiders_paired)
+
+# First pivot the data to long format if it isn't already
+spiders_long <- tidyr::pivot_longer(
+  spiders_paired,
+  cols = c("picture", "real_spider"),
+  names_to = "condition",
+  values_to = "anxiety"
+)
+
+# Second calculate the grand mean for both contexts
+anxiety_scores <- dplyr::pull(spiders_long, anxiety)
+grand_mean <- mean(anxiety_scores)
+
+# Third calculate each participant's mean score between the two contexts of the
+# dependent variable, then an adjustment score by first subtracting the
+# participant mean from the grand mean, then by adding the adjustment to
+# participant scores in each context. You can accomplish this first by grouping
+# by participant, then performing the calculations within the mutuate()
+# function.
+spiders_long <- dplyr::group_by(spiders_long, case) 
+spiders_long <- dplyr::mutate(
+  spiders_long,
+  mean_anxiety = mean(anxiety),
+  adjustment = grand_mean - mean_anxiety,
+  anxiety_adj = anxiety + adjustment
+)
+
+# Finally you can plot it using ggpubr
+ggpubr::ggline(spiders_long, x = "condition", y = "anxiety_adj", add = "mean_ci")
+```
+
+### Composing plots
+
+The plotting code above will serve your needs for most assignment questions in the course, but questions requiring APA style need a bit more formatting attention.
+
+#### Labels
+
+You may have noticed the axis labels in the plots above were all in lower case. Every plotting function in the ggpubr package has additional optional arguments---which you can see by going to the function's help page---that can be used to change plot labels. Here is an example with the `ggbarplot()` function; note the additional `xlab` and `ylab` arguments.
+
+```{r labels}
+ggpubr::ggbarplot(
+  data = spiders,
+  x = "group",
+  y = "anxiety",
+  add = "mean_ci",
+  xlab = "Group",
+  ylab = "Anxiety"
+)
+```
+
+#### Moving the legend
+
+APA requires legends to be located within the plotting area, but ggplot2 places legends outside the plotting area by default. If your plot has a legend you can move it with the `apa_legend()` function. This is a custom function included in the PSYC 615 Lab repository, you can make it available by using the `source()` function. Options for the `position` argument are: "topleft", "topright", "topmiddle", "bottomleft", "bottomright", "bottommiddle", or "none".
+
+```{r legends}
+# The source function runs R script files so their contents can be made
+# available to use in R Markdown documents such as this one
+source(here::here("R", "apa_legend.R"))
+
+# The fill argument groups the data, resulting in a legend. The palette
+# argument is used to change the fill colour of the boxplots.
+grouped_boxplot <- ggpubr::ggboxplot(
+  data = spiders,
+  y = "anxiety",
+  fill = "group",
+  palette = "grey"
+)
+
+# Use ggplot2 syntax (the + sign) to move the legend
+grouped_boxplot +
+  apa_legend(position = "topleft")
+```
+
+#### Multiple plots as a single figure
+
+The **patchwork** package makes it very easy to combine multiple plots into a single figure. Simply assign your plots to objects, then compose them using patchwork's syntax. Note: the patchwork library needs to be loaded for this to work; in this document it was loaded in the prerequisites section.
+
+```{r patchwork}
+# First create some plots
+plot_a <- ggpubr::gghistogram(data = spiders, x = "anxiety")
+plot_b <- ggpubr::ggqqplot(data = spiders, x = "anxiety")
+
+# Then compose them together and add an annotation to distinguish them
+plot_a + plot_b +
+  patchwork::plot_annotation(tag_levels = "A")
+```
+
+#### Figure captions
+
+APA style also requires figures to have captions. There are two ways to go about this in an R Markdown document. The first is to type the caption directly into the code chunk options of the chunk where your plot is output from, using the `fig.cap` chunk option (note: you need to look at the R Markdown file to see this, not the rendered document).
+
+```{r caption-a, fig.cap="A short figure caption."}
+ggpubr::ggboxplot(data = spiders, y = "anxiety")
+```
+
+The second, and usually better, option is to place a reference to the caption in the code chunk options. You can see how this works below (note: you need to look at the R Markdown file to see this, not the rendered document).
+
+<!-- ---------------------------------------------------------------------- -->
+(ref:caption-b) When you have a long caption using the second option is better because it keeps your code chunk options short and clean.
+
+```{r caption-b, fig.cap="(ref:caption-b)"}
+ggpubr::ggboxplot(data = spiders, y = "anxiety")
+```
+
+### Tables
+
+R also has great packages for making tables. Unfortunately you will not get to play around with these in this course. Partly because you will only ever make very simple tables in this course, and partly because R's best table making packages do not support Microsoft Word documents at the moment.
+
+The easiest way to output an APA style table in an R Markdown document is to use the `apa_table()` function (`?papaja::apa_table`) from the **papaja** package. This function takes a data frame and APA styles it when you knit your document, with an optional caption using the `caption` argument.
+
+```{r papaja-table}
+# If you run this code in the console the output will look like gibberish. You
+# need to knit the document as a PDF or Word file to see the proper result.
+apa_tab <- papaja::apa_table(simpsons, caption = "Table showing Simpsons ages")
+```
+
+However, you should note that the `apa_table()` function will not do all the APA styling work for you. Things such as capitalization, number of digits printed, and so forth must be either: (1) Handled beforehand in the data frame given to the `apa_table()` function; or (2) handled afterwords manually in Microsoft Word.
+
+<!-- Note to future TAs or students who are fine messing with development versions of R packages: The gt package will have word support in the future. As of Aug 31, 2021, there is a PR in development on Word support https://github.com/rstudio/gt/pull/811. Once this is complete gt will likely be a better option than papaja for APA tables. Here is a blogpost showing how to make APA-like tables with gt https://www.anthonyschmidt.co/post/2020-06-03-making-apa-tables-with-gt/. This could be used currently by creating a gt table then saving it as a png; it's not as good as a native table in Word but it's workable and would allow students to use gt's capabilities for formatting nice tables. -->
+
+## Including images
+
+If you need to include any images in your R Markdown document you can use the `knitr::include_graphics()` function(`?knitr::include_graphics`) from the **knitr** package. Note that you actually need to use the `knitr::` namespacing for this one. Images can also be given captions using the same method as with plots.
+
+```{r images}
+knitr::include_graphics(here::here("images", "help-yourself-01_outlier.png"))
+```
+
+## Descriptive statistics
+
+### Mean and standard deviation
+
+The `mean()` function (`?mean`) takes a vector of numbers as input and returns the mean as output.
+
+```{r mean}
+zero_to_one_hundred <- 0:100
+
+mean(zero_to_one_hundred)
+```
+
+The `sd()` function (`?sd`) works the same way as the `mean()` function, but returns the standard deviation as output.
+
+```{r sd}
+some_numbers <- c(1, 15, 98, 45, 37, 56)
+
+sd(some_numbers)
+```
+
+### Skewness and kurtosis
+
+The `skewness()` and `kurtosis()` functions (`?datawizard::skewness`) from the **datawizard** package can be used to calculate skewness and kurtosis. There are different algorithms for calculating skewness and kurtosis, these can be selected using the optional `type` argument (`type = 2` matches SPSS and SAS).
+
+```{r skewness-kurtosis}
+datawizard::skewness(some_numbers)
+datawizard::kurtosis(some_numbers)
+```
+
+### Calculate all descriptive statistics with a single function
+
+You can also use the `describe()` function (`?psych::describe`) from the **psych** package to calculate all your descriptive statistics at once. The optional `type` argument selects which algorithm to calculate skewness and kurtosis with (`type = 2` matches SPSS and SAS). Note that the `describe()` function will calculate descriptive statistics for all columns in a data frame, even if that would not make sense for all columns. You can wrangle your data frame beforehand with the `select()` function from the dplyr package if you only want to see output for the relevant columns.
+
+```{r describe}
+psych::describe(spiders, type = 2)
+```
+
+You can use the `describeBy()` function (`?psych::describeBy`) if you want to calculate all descriptive statistics by a grouping variable.
+
+```{r describeBy}
+psych::describeBy(spiders, group = "group", type = 2)
+```

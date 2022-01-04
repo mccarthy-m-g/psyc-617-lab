@@ -1,0 +1,170 @@
+---
+title: "Help yourself: Introduction"
+author:
+  - name: "Michael McCarthy"
+    url: https://github.com/mccarthy-m-g
+    affiliation: "PSYC 617 Lab"
+    affiliation_url: https://github.com/mccarthy-m-g/psyc-617-lab
+repository_url: https://github.com/mccarthy-m-g/psyc-617-lab
+output:
+  distill::distill_article:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = "#>", collapse = TRUE)
+```
+
+## Welcome
+
+Welcome to the PSYC 617 lab! In the following weeks you will learn to apply a variety of statistical methods and develop a greater understanding of model building in statistics.
+
+All of the applied work for labs will be delivered in documents like this one, where we will go through analysis and code together. I have titled these documents "Help Yourself" because that's what you will be using them for---helping yourself learn and apply new statistical methods to data. You're still free to ask for help or go searching on your own if you need to, but these documents serve as a good jumping off point. If you are going to use any of these methods outside of the course, you should do independent reading to better understand them anyways (at least in my own experience and opinion); statistics is complex and we cannot give a thorough treatment of anything in a week. 
+
+I have structured the Help Yourself documents as follows for each week:
+
+1. Prerequisites, covering the R packages and data used that week
+2. Demonstration and application in R
+3. A learning more section with resources you might find interesting, helpful, or perhaps perspective changing
+
+For the remainder of this document I will discuss how labs will work, and give a brief overview of R and R Markdown.
+
+## Prerequisites
+
+You will need to install a number of R packages for the lab. We'll do that now so you are set up for the course.
+
+```{r, eval=FALSE}
+source(file.path("R", "packages.R"))
+```
+
+## Weekly assignments
+
+You can write all your assignments for this course in R Markdown. Templates for each assignment can be found in the assignments folder of this repository. Make sure to use them---they're set up to make the assignment writing process simple for you. When you knit the templates they will create a Word document in APA style, one with and one without the code, each with the file naming scheme required for handing in assignments.
+
+R Markdown has a source (plain text) and visual (markup) editor you can use and switch between when completing assignments <https://rstudio.github.io/visual-markdown-editing/>. You will likely find the visual editor helpful, so check it out!
+
+We don't have time to dive into all the details of using R Markdown in this course, but you can find a nice introduction to it in the R for Data Science book <https://r4ds.had.co.nz/r-markdown.html>. If you do run into problems knitting your assignments, or find the output doesn't look how you expect, please let your TA know.
+
+## Weekly learning
+
+Each week you will learn something new in this lab. All of the learning material in this course is cumulative, so it is important not to skip anything.
+
+If you are new to R, I recommend you work through the [Hands-On Programming with R](https://rstudio-education.github.io/hopr/) book, chapters 1 to 7, before next lab (or as much as you can). That sounds like a lot, but the chapters are short. You can either work through the book with the [R project](https://support.rstudio.com/hc/en-us/articles/200526207-Using-Projects) for this lab repository, or you can create a new R project and work through the book with that. This will help you learn better and set you up for success for the rest of the course. If you run into problems or have any questions write them down and ask about them in next week's lab.
+
+I have also included two other Help Yourself documents this week which you should go through independently. One covers basic things in R that will help you throughout the course; the other goes over an assignment example showing how to write and code in R Markdown for assignments (note that it does *not* show how to write a great results section).
+
+For an introduction to some of the R basics you will need for this course, please see the following file: `labs/01_intro/help-yourself_R-basics.Rmd`.
+
+For tips on writing assignments in R Markdown for this course, please see the following file: `labs/01_intro/help-yourself_assignment-example.Rmd`.
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+Note: You do not need to create code chunks manually. The keyboard shortcut `command + alt + i` (MacOS) or `control + alt + i` (Windows) will create a code chunk where your cursor is. The cheatsheets folder of this repository has an RStudio cheatsheet showing other useful keyboard shortcuts and tips to make working in RStudio easier.
+
+You can also embed plots, for example:
+
+```{r pressure}
+plot(pressure)
+```
+
+You can add figure captions to plots too:
+
+```{r pressure-cap}
+#| fig.cap: >
+#|  The relation between temperature in degrees Celsius and vapour pressure of
+#|  mercury in millimeters (of mercury).
+plot(pressure)
+```
+
+If you want to save the data created by R code you can store it inside an object with the arrow `<-` operator:
+
+```{r}
+r_is_awesome <- "R is awesome!"
+```
+
+You can then output the data stored inside an output by calling its name:
+
+```{r}
+r_is_awesome
+```
+
+You can see all the objects you have created in the environment pane.
+
+You can write math using a single pair of dollar signs `$` for inline math (great for writing statistical results!):
+
+"There was a statistical difference between the two groups, $t(55) = 1.64$, $p = .106$, $d = 0.44$."
+
+Or with a double pair of dollar signs `$$` for display math:
+
+$$
+\bar{X} = \frac{\sum_{i=1}^{n} x_{i}}{n}
+$$
+
+This post on Stack Exchange covers everything you need to know to write math in R Markdown <https://math.meta.stackexchange.com/questions/5020/mathjax-basic-tutorial-and-quick-reference>.
+
+That concludes our basic overview of R Markdown. We don't have time to dive into all the details of using R Markdown in this course, but you can find a nice introduction to it in the R for Data Science book <https://r4ds.had.co.nz/r-markdown.html>. If you do run into problems knitting your assignments, or find the output doesn't look how you expect, please let your TA know.
+
+## Learning more
+
+### From the R for Data Science book
+
+-   R basics <https://r4ds.had.co.nz/workflow-basics.html>
+-   An introduction to RStudio projects <https://r4ds.had.co.nz/workflow-projects.html>
+-   An introduction to R Markdown <https://r4ds.had.co.nz/r-markdown.html>
+-   More details on tibbles and data wrangling in R <https://r4ds.had.co.nz/wrangle-intro.html>
+-   Details on pipes (`%>%`) in R (we did not cover pipes in this Help Yourself but we will use them in future code examples) <https://r4ds.had.co.nz/pipes.html>
+
+### Styling and formatting your R code for readability
+
+-   The tidyverse style guide <https://style.tidyverse.org>
+
+### Other R stuff
+
+- Data visualisation using R, for researchers who don't use R <https://psyarxiv.com/4huvw>
+
+### Statistics course notes
+
+- Stats of DOOM <https://statisticsofdoom.com>
+- PA652: Statistical Analysis by Solomon Kurz <https://osf.io/3g8vf/>
+- PSY2002: Advanced Statistics by Elizabeth Page-Gould <https://osf.io/q6wnd/>
+- Jason Newsom's Course notes for multiple regression <https://web.pdx.edu/~newsomj/mvclass/>, mixed models <https://web.pdx.edu/~newsomj/mlrclass/>, and SEM <https://web.pdx.edu/~newsomj/semclass/>
+- Cheat Sheets for Machine Learning and Data Science <https://sites.google.com/view/datascience-cheat-sheets>
+
+### General tips
+
+- The Science of Visual Data Communication: What Works <https://doi.org/10.1177%2F15291006211051956>
+- Making the Most of Statistical Analyses: Improving Interpretation and Presentation <https://gking.harvard.edu/files/making.pdf>
+- Let’s Practice What We Preach: Turning Tables into Graphs <https://www4.stat.ncsu.edu/~davidian/st810a/gelman.pdf>
+
+### Stats books
+
+- Serious Stats: A guide to advanced statistics for the behavioral sciences <https://www.bloomsbury.com/us/serious-stat-9780230577183/>
+
+### Real data sets for practice
+
+- Richard Morey's data packs <https://github.com/richarddmorey/ExampleDatasets>
+
+### Statistical thinking
+
+#### General
+
+- Statistics as rhetoric in psychology <https://www.tandfonline.com/doi/abs/10.1080/00050069208257601>
+- Some Myths and Legends in Quantitative Psychology <https://www.tandfonline.com/doi/pdf/10.1207/s15328031us0302_3?needAccess=true>
+- More Statistical and Methodological Myths and Urban Legends <https://journals.sagepub.com/doi/10.1177/1094428110391814>
+- Reference collection to push back against "Common Statistical Myths" <https://discourse.datamethods.org/t/reference-collection-to-push-back-against-common-statistical-myths/1787>
+- The Conceptual, Cunning, and Conclusive Experiment in Psychology <https://doi.org/10.1177%2F17456916211026947>
+
+#### Significance testing
+
+- Why and How We Should Join the Shift From Significance Testing to Estimation <https://www.preprints.org/manuscript/202112.0235/v1>
+- On the Surprising Longevity of Flogged Horses: Why There Is a Case for the Significance Test <https://journals.sagepub.com/doi/10.1111/j.1467-9280.1997.tb00536.x>
+- Semantic and cognitive tools to aid statistical science: replace confidence and significance by compatibility and surprise <https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-020-01105-9>
+- A Reckless Guide to P-values <https://link.springer.com/chapter/10.1007/164_2019_286>
