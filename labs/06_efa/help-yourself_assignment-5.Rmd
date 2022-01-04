@@ -1,0 +1,160 @@
+---
+title: "Help yourself: Assignment 5"
+author:
+  - name: "Michael McCarthy"
+    url: https://github.com/mccarthy-m-g
+    affiliation: "PSYC 617 Lab"
+    affiliation_url: https://github.com/mccarthy-m-g/psyc-617-lab
+repository_url: https://github.com/mccarthy-m-g/psyc-617-lab
+output:
+  distill::distill_article:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = "#>", collapse = TRUE)
+```
+
+## Prerequisites
+
+To access the datasets, help pages, and functions that we will use in this *help yourself*, load the following packages:
+
+```{r prerequisites}
+here::i_am("labs/05_multilevel-modelling/help-yourself_assignment-4.Rmd")
+
+library(here)
+library(tidyverse)
+library(psych)
+library(EFAtools)
+```
+
+As well as this Help Yourself's example data:
+
+```{r example-data}
+# Measuring SPSS Anxiety
+# - 23-item questionnaire designed to measure various aspects of student
+#   anxiety towards SPSS
+# - Five-point Likert scale from "strongly disagree" to "strongly agree"
+anxiety <- readr::read_csv(
+  here::here("data", "help-yourself_a5.csv")
+)
+```
+
+## Assumptions
+
+You can check assumptions and get the suggested number of factors using the `N_FACTORS()` function (`?EFAtools::N_FACTORS`) from the **EFAtools** package. There are two ways to go about this: One, you can provide it with your raw data (in which case the data frame should only contain the variables you plan to do factor analysis with; no ID columns or anything like that). Two, you can provide it with a correlation matrix (which I will show later). The `criteria` argument specifies the factor retention methods to perform, the `method` argument specifies the estimation method, and the `eigen_type_other` specifies what eigenvalues should be used ("EFA", or "PCA").
+
+```{r}
+EFAtools::N_FACTORS(
+  anxiety,
+  criteria = c("KGC", "SCREE", "PARALLEL"),
+  method = "PAF",
+  eigen_type_other = "EFA"
+)
+```
+
+## EFA
+
+You can run an EFA with the `EFA()` function (`?EFAtools::EFA`) from the **EFAtools** package. Again, you can provide it with either a data frame or correlation matrix. The `n_factors` argument specifies the number of factors to extract, the `method` argument specifies the estimation method (same as above). the `rotation` argument specifies what rotation method to use (or "none").
+
+```{r}
+EFA(
+  anxiety,
+  n_factors = 7,
+  rotation = "varimax"
+)
+```
+
+## Ordinal data
+
+The data for this example is ordinal, so the analyses we just ran are inappropriate. I mentioned we can use correlation matrices rather than raw data for EFAs. Here we will do that using polychoric correlations, which are appropriate for ordinal data.
+
+You can use the `polychoric()` function (`?psych::polychoric`) from the **psych** package to compute polychoric correlations.
+
+```{r}
+anxiety_polychoric <- psych::polychoric(anxiety)
+
+anxiety_polychoric
+```
+
+This returns a list, but we only need the correlation matrix so we'll pluck that out.
+
+```{r}
+anxiety_polychoric <- purrr::pluck(anxiety_polychoric, "rho")
+```
+
+Now we'll check assumptions again, this time using the correlation matrix. Here we use the `N` argument to specify the size of the sample the correlation matrix was calculated from.
+
+```{r}
+EFAtools::N_FACTORS(
+  anxiety_polychoric,
+  criteria = c("KGC", "SCREE", "PARALLEL"),
+  N = 5840,
+  method = "PAF",
+  eigen_type_other = "EFA"
+)
+```
+
+And now the EFA. I also chose to use an oblique rotation method here because it is likely a more realistic choice. You can see that the loadings are noticeably different from the first EFA we ran.
+
+```{r}
+anxiety_model <- EFA(
+  anxiety_polychoric,
+  n_factors = 7,
+  N = 5840,
+  rotation = "promax"
+)
+
+anxiety_model
+```
+
+## Broom
+
+There are not any tidy methods for the EFAtools output, but the model object returns a list that you can use to access the output. You can check all the things you can extract using the `names()` function.
+
+```{r}
+names(anxiety_model)
+```
+
+Then you can pluck anything you would like using the names above.
+
+```{r}
+purrr::pluck(anxiety_model, "rot_loadings")
+```
+
+Some of these objects you will need to coerce further to make use of them programmatically. Kind of annoying but oh well.
+
+```{r}
+purrr::pluck(anxiety_model, "rot_loadings") %>% 
+  # We first unclass the object because an object of class LOADINGS cannot be
+  # converted to a tibble by default. 
+  unclass() %>% 
+  as_tibble(rownames = "item")
+```
+
+It's an open source package so you could always write tidy methods for the output and submit them to the author to have them integrated into the package. For example, for the LOADINGS class you could do:
+
+```{r}
+# Create a tidy method for the LOADINGS class
+tidy.LOADINGS <- function(x) {
+  tibble::as_tibble(unclass(x), rownames = "item")
+}
+
+# Now this works!
+purrr::pluck(anxiety_model, "rot_loadings") %>% 
+  broom::tidy()
+```
+
+## Other packages
+
+You can also use either the psych package or the lavaan package to do EFA.
+
+- How To: Use the psych package for Factor Analysis and data reduction <https://cran.r-project.org/web/packages/psychTools/vignettes/factor.pdf>
+- Yes, you can fit an exploratory factor analysis with lavaan <https://solomonkurz.netlify.app/post/2021-05-11-yes-you-can-fit-an-exploratory-factor-analysis-with-lavaan/>
+
+## Learning more
+
+### R
+
+- EFAtools vignette <https://cran.r-project.org/web/packages/EFAtools/vignettes/EFAtools.html>
+- Replicate SPSS and R psych results with EFAtools <https://cran.r-project.org/web/packages/EFAtools/vignettes/Replicate_SPSS_psych.html>
