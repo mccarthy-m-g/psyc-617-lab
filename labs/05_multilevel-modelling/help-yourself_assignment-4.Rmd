@@ -213,6 +213,9 @@ summary(sales_mixed_model_4)
 
 As with everything else, we should be transparent about what we did here in our statistical report. Even if we don't run into convergence issues, we should still declare the optimization algorithm we chose in our report (and cite its authors!). If you stick with the default optimizer, you can see what that is on the `?lme4::lmerControl` help page.
 
+- Using allFit() with (g)lmer <https://joshua-nugent.github.io/allFit/>
+- How scared should we be about convergence warnings in lme4? <https://stats.stackexchange.com/questions/110004/how-scared-should-we-be-about-convergence-warnings-in-lme4>
+
 ## Significance tests for fixed effects coefficients
 
 You might have noticed there are no significance tests for the coefficients. There is a very good reason for this: For anything beyond special cases that correspond to classical experimental designs (i.e. balanced designs that are nested, split-plot, randomized block, etc.), the [residual degrees of freedom are unknown](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#why-doesnt-lme4-display-denominator-degrees-of-freedomp-values-what-other-options-do-i-have). So the authors of the lme4 package [made a conscious decision](https://stat.ethz.ch/pipermail/r-help/2006-May/094765.html) not to provide any degrees of freedom; as a consequence you do not get a significance test for the coefficients. No stargazing today.
@@ -435,27 +438,33 @@ You can also use the `tex_preview()` function (`?texPreview::tex_preview`) from 
 
 NOTE: FOR THE ASSIGNMENT I WILL NOT ACCEPT THIS FORM OF NOTATION; USE THE NOTATION FROM TOM'S LECTURE.
 
-## Generalized linear mixed effects models
-
-Just wanted to share this paper by Jonas Kristoffer Lindeløv on why you might want to use a GLMER for reaction time data instead of a model that assumes your errors are normally distributed <https://lindeloev.github.io/shiny-rt/>. Not everything we study is best characterized by a normal distribution, and that shouldn't necessarily be your go to choice just because your stats education focused on it.
-
 ## Learning more
 
+### General
+
+- Learning Multilevel Analysis Using Visualisation of the predicted values <https://psyarxiv.com/7nzx2/>
 - Fitting Linear Mixed-Effects Models Using lme4 <https://cran.r-project.org/web/packages/lme4/vignettes/lmer.pdf>
 - Mixed Models with R: Getting started with random effects <https://m-clark.github.io/mixed-models-with-R/>
 - Thinking About Mixed Models <https://m-clark.github.io/docs/mixedModels/mixedModels.html>
 - GLMM FAQ (lots of valuable info here; you should read through the whole thing at least once) <https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html>
 - An Introduction to Mixed Models for Experimental Psychology <http://singmann.org/download/publications/singmann_kellen-introduction-mixed-models.pdf>
+- How to analyze linguistic change using mixed models, Growth Curve Analysis and Generalized Additive Modeling (this is a really great paper) <https://academic.oup.com/jole/article/1/1/7/2281883#82980835>
+
+### ANOVA comparison
 
 - ANOVA and mixed models <https://stat.ethz.ch/~meier/teaching/anova/random-and-mixed-effects-models.html>
 
+### Optimizers
+
 - On Best Practice Optimization Methods in R (this paper has some good references about optimizers; it probably isn't relevant to you) <https://www.jstatsoft.org/article/view/v060i02>
+
+### Ordinal mixed models
+
+The ordinal package has you covered. Go back to the Help Yourself for assignment 1 for links.
 
 ## Cross Validated
 
 - How to choose random- and fixed-effects structure in linear mixed models? <https://stats.stackexchange.com/q/130714/337979>
-
-- 
 
 ### R
 
