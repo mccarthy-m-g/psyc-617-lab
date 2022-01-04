@@ -20,7 +20,7 @@ knitr::opts_chunk$set(echo = TRUE, comment = "#>", collapse = TRUE)
 To access the datasets, help pages, and functions that we will use in this *help yourself*, load the following packages:
 
 ```{r prerequisites}
-here::i_am("labs/05_multilevel-modelling/help-yourself_assignment-4.Rmd")
+here::i_am("labs/06_efa/help-yourself_assignment-5.Rmd")
 
 library(here)
 library(tidyverse)
