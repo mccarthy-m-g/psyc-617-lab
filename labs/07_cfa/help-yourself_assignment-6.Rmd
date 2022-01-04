@@ -1,0 +1,99 @@
+---
+title: "Help yourself: Assignment 6"
+author:
+  - name: "Michael McCarthy"
+    url: https://github.com/mccarthy-m-g
+    affiliation: "PSYC 617 Lab"
+    affiliation_url: https://github.com/mccarthy-m-g/psyc-617-lab
+repository_url: https://github.com/mccarthy-m-g/psyc-617-lab
+output:
+  distill::distill_article:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = "#>", collapse = TRUE)
+```
+
+## Prerequisites
+
+To access the datasets, help pages, and functions that we will use in this *help yourself*, load the following packages:
+
+```{r prerequisites}
+here::i_am("labs/07_cfa/help-yourself_assignment-6.Rmd")
+
+library(here)
+library(tidyverse)
+library(lavaan)
+```
+
+As well as this Help Yourself's example data:
+
+```{r example-data}
+beasts <- readr::read_csv(
+  here::here("data", "help-yourself_a6.csv")
+)
+```
+
+## Notes on software
+
+The **lavaan** package is the main R package for latent variable analysis, but there are other packages too. It is a commercial quality package, and can also mimic the results of several commercial programs (e.g., Mplus) if you ever need to do that.
+
+There are some companion packages to lavaan that make certain things even easier, or extend its capabilities. The main one is the **semTools** package, which has tools for SEM (duh). There is also the **tidySEM** package, which provides a tidy framework for working with lavaan models (and has some other helpers). Finally, there are currently two mature packages that are available to make SEM graphs: tidySEM and semPlot. We will use the tidySEM package here. Both packages use the **igraph** package as their backend for creating SEM graphs. The tidySEM package makes it a bit easier to customize graphs though.
+
+There is also the **blavaan** package if you want to take a Bayesian approach to SEM.
+
+The lavaan package has an excellent tutorial available here <https://lavaan.ugent.be/tutorial/index.html>. You should take the time to read it.
+
+## lavaan syntax
+
+The lavaan tutorial describes lavaan syntax in full here <https://lavaan.ugent.be/tutorial/syntax1.html> and here <https://lavaan.ugent.be/tutorial/syntax2.html>. Briefly, the current set of formula types is summarized in the table below.
+
+| formula type               | operator | mnemonic           |
+|----------------------------|----------|--------------------|
+| latent variable definition | =~       | is measured by     |
+| regression                 | ~        | is regressed on    |
+| (residual) (co)variance    | ~~       | is correlated with |
+| intercept                  | ~ 1      | intercept          |
+
+When defining a CFA model you can choose to define every single part (i.e., have full control) or define the main parts of the model and let lavaan handle the rest behind the scenes. Again, see the lavaan tutorial site for details. Here we will let lavaan handle things behind the scenes because it is sufficient for what we are doing.
+
+## CFA
+
+Since CFA models tend to be big, we first define our model before fitting it. In lavaan, models are written as strings. I like to enclose the strings in parentheses, as it allows you to save the object no matter where your cursor is in the string. Aside from the formulas you write for your model, you can also include comments and line breaks within the string---take advantage of this to make your models more readable.
+
+```{r}
+beasts_model <- ("
+  # Latent variable definitions
+  mythical = ~ ghosts + werewolves + zombies 
+  real = ~ cougars + bears + moose
+")
+```
+
+
+Once you have defined your model you can use the `cfa()` function (`?lavaan::cfa`) from the lavaan package to fit the model.
+
+```{r}
+fit_beasts_model <- lavaan::cfa(beasts_model, data = beasts)
+```
+
+Once the model has been fitted, you can use the `summary()` function (`?lavaan::`summary,lavaan-method``) to get a summary of the fitted model.
+
+```{r}
+summary(fit_teaching_model)
+```
+
+This looks bare bones. The `summary()` function has a number of optional arguments to show or hide different summary information. Here are all the options, and their default values: `header = TRUE, fit.measures = FALSE, estimates = TRUE, ci = FALSE, fmi = FALSE, standardized = FALSE, remove.step1 = TRUE, cov.std = TRUE, rsquare = FALSE, std.nox = FALSE, modindices = FALSE, ci = FALSE, nd = 3L`.
+
+Note that when `standardized=TRUE` SEs and tests are still based on unstandardized estimates. Use the `standardizedSolution()` function (`?lavaan::standardizedSolution`) to obtain standardized SEs and test statistics for standardized estimates. This argument simply adds two extra columns of standardized parameter values to the summary: the `Std.lv` column contains estimates when only the latent variables are standardized, and the `Std.all` column contains estimates when both latent and observed variables are standardized.
+
+```{r}
+summary(
+  fit_beasts_model,
+  fit.measures = TRUE,
+  rsquare = TRUE,
+  standardized = TRUE
+)
+```
+
+You can now give next week's Help Yourself a look for more details on working with the lavaan package, and latent variable models more generally. Everything from next week about SEM will apply to CFA as well, as far as R goes.
