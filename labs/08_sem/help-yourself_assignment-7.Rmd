@@ -291,10 +291,6 @@ And here are two excellent papers about considerations when working with ordinal
 - Levels of measurement and statistical analyses <https://open.lnu.se/index.php/metapsychology/article/view/1916>
 - Analyzing Ordinal Data with Metric Models: What Could Possibly Go Wrong? <https://papers.ssrn.com/abstract=2692323>
 
-## SEM vs. EFA
-
-Yes, you can fit an exploratory factor analysis with lavaan <https://solomonkurz.netlify.app/post/2021-05-11-yes-you-can-fit-an-exploratory-factor-analysis-with-lavaan/>
-
 ## SEM vs mixed models
 
 Mixed models can be used in a SEM framework too. Here's a demonstration using the data from the mixed models lab.
