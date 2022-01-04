@@ -47,6 +47,8 @@ If you need to be explicit about where a function (or dataset) comes from, you c
 
 Telling R explicitly where a function comes from is called *namespacing*. The code below will always be explicit about where functions from loaded packages come from so that it is easier for you to help yourself when you want to learn more about a given function. However, you do not need to namespace functions in your code for assignments so long as you have the prerequisite packages loaded in your session.
 
+You will also need to load this Help Yourself's example data:
+
 ```{r}
 maths <- readr::read_csv(here::here("data", "help-yourself_a1.csv"))
 ```
@@ -502,6 +504,10 @@ mtcars %>%
     - Data Analysis Using Regression and Multilevel/Hierarchical Models <http://www.stat.columbia.edu/~gelman/arm/>
     - Regression and Other Stories <https://avehtari.github.io/ROS-Examples/>
 - Exegeses on linear models <https://www.stats.ox.ac.uk/pub/MASS3/Exegeses.pdf>
+- Regression Modeling Strategies: With Applications to Linear Models, Logistic and Ordinal Regression, and Survival Analysis <http://hbiostat.org/rms/>
+
+### Transforming variables
+
 - In linear regression, when is it appropriate to use the log of an independent variable instead of the actual values? <https://stats.stackexchange.com/q/298/337979>
 - Interpreting Log Transformations in a Linear Model <https://data.library.virginia.edu/interpreting-log-transformations-in-a-linear-model/>
 
@@ -515,8 +521,18 @@ Here is some reading if you are interested:
 - Generalized Additive Models notes <https://m-clark.github.io/generalized-additive-models/>
 - Nonparametric Regression in R <https://socialsciences.mcmaster.ca/jfox/Books/Companion/appendices/Appendix-Nonparametric-Regression.pdf>
 
+### Ordinal regression
+
+If you are working with ordinal data, such as *Likert scales*, it is not appropriate to treat that data as continuous. Instead of doing OLS regression you can use cumulative link models (CLMs), which are a powerful model class for ordinal data that correctly treat observations as categorical and exploit their ordered nature, and allow for in-depth analyses. You can use the **ordinal** package to fit such models. The paper below introduces CLMs and how to run them in R with the ordinal package.
+
+- Cumulative Link Models for Ordinal Regression with the R Package ordinal <https://cran.r-project.org/web/packages/ordinal/vignettes/clm_article.pdf>
+
+Note that the package has support from many of the tools we are used to using, such as emmeans.
+
 ### Cross-validation (aka the machine learning approach to stats)
 
+- Tidy Models with R <https://www.tmwr.org>
+- Tidymodels <https://www.tidymodels.org>
 - Choosing Prediction Over Explanation in Psychology: Lessons From Machine Learning <https://doi.org/10.1177/1745691617693393>
 - Putting Psychology to the Test: Rethinking Model Evaluation Through Benchmarking and Prediction <https://doi.org/10.1177/25152459211026864>
 - Chapter 5 of An Introduction to Statistical Learning (download link on page) <https://www.statlearning.com>
@@ -527,16 +543,14 @@ Here is some reading if you are interested:
 - Improving Present Practices in the Visual Display of Interactions <https://journals.sagepub.com/doi/10.1177/2515245917746792>
 - Precise Answers to Vague Questions: Issues With Interactions <https://journals.sagepub.com/doi/full/10.1177/25152459211007368>
 - That’s a lot to PROCESS! Pitfalls of Popular Path Models <https://psyarxiv.com/paeb7/>
+- Maybe Testing the "Significance" of Simple Slopes is Useless?
+ <https://quantpsych.net/simple-slopes-models-in-jasp-r/>
 
 ### Improve your statistical thinking
 
-- Statistics as rhetoric in psychology <https://www.tandfonline.com/doi/abs/10.1080/00050069208257601>
-- Some Myths and Legends in Quantitative Psychology <https://www.tandfonline.com/doi/pdf/10.1207/s15328031us0302_3?needAccess=true>
-- More Statistical and Methodological Myths and Urban Legends <https://journals.sagepub.com/doi/10.1177/1094428110391814>
-
 - Statistics and the Scientific Method (emphasizes how regression models have not been so useful in the social sciences) <https://link.springer.com/chapter/10.1007/978-1-4613-8536-3_11>
+- How Not to Lie with Statistics: Avoiding Common Mistakes in Quantitative Political Science <https://gking.harvard.edu/files/mist.pdf>
 
-- Why and How We Should Join the Shift From Significance Testing to Estimation <https://www.preprints.org/manuscript/202112.0235/v1>
-- On the Surprising Longevity of Flogged Horses: Why There Is a Case for the Significance Test <https://journals.sagepub.com/doi/10.1111/j.1467-9280.1997.tb00536.x>
-- Semantic and cognitive tools to aid statistical science: replace confidence and significance by compatibility and surprise <https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-020-01105-9>
-- A Reckless Guide to P-values <https://link.springer.com/chapter/10.1007/164_2019_286>
+### R
+
+- [easystats](https://easystats.github.io/easystats/)
