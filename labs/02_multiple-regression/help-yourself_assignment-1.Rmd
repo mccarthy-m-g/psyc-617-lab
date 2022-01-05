@@ -347,15 +347,46 @@ Finally, we can plot the simple slopes using the `ggemmeans()` function (`?ggeff
 maths_simple_slopes <- ggeffects::ggemmeans(
     maths_moderation,
     # The call to [meansd] determines what values to plot the slopes at
-    c("math_interest","teacher_quality [meansd]")
+    terms = c("math_interest","teacher_quality [meansd]")
   )
 
 plot(
   maths_simple_slopes,
   ci = TRUE, # You can remove CIs by making this FALSE but you shouldn't
-  colors = "gs" # or "bw"
+  add.data = TRUE, # You can remove data by making this FALSE but you shouldn't
+  colors = "metro", # For APA use either "gs" "bw"
+  alpha = 0.5,
+  dot.alpha = 1
 ) +
   ggpubr::theme_pubr()
+```
+
+### Johnson-Neyman intervals
+
+You can also use the `johnson_neyman()` function (`?interactions::johnson_neyman`) from the **interactions** package to compute Johnson-Neyman intervals, which will tell you at what magnitudes of the moderator your simple slopes are considered statistically different from zero. See the help page for some references about this method and how to interpret it.
+
+The plot that is returned along with this function is known as a marginal effects (or regions of significance) plot. Here the moderator variable is on the X-axis, and the *simple slope* of the predictor is on the Y-axis; thus, we can see how the simple slope changes over the entire range of the moderator, rather than a handful of arbitrarily selected values.
+
+```{r}
+maths_jn <- interactions::johnson_neyman(
+  maths_moderation,
+  pred = math_interest,
+  modx = teacher_quality,
+  alpha = 0.05,
+  plot = TRUE,
+  sig.color = "black",
+  insig.color = "grey",
+  title = NULL
+)
+
+maths_jn
+```
+
+If you want to add data points to the plot you can do it like so. This corresponds to the range bar on the plot, but being able to see the frequency of the points is helpful. For example, here we see the minimum range is characterized by a single observation that's far away from the rest of the observations.
+
+```{r}
+purrr::pluck(maths_jn, "plot") +
+  ggplot2::geom_rug(data = maths, mapping = aes(x = teacher_quality))
 ```
 
 ## Transforming variables
@@ -545,6 +576,7 @@ Note that the package has support from many of the tools we are used to using, s
 - That’s a lot to PROCESS! Pitfalls of Popular Path Models <https://psyarxiv.com/paeb7/>
 - Maybe Testing the "Significance" of Simple Slopes is Useless?
  <https://quantpsych.net/simple-slopes-models-in-jasp-r/>
+ - Recoding Introduction to Mediation, Moderation, and Conditional Process Analysis <https://bookdown.org/ajkurz/recoding_Hayes_2018/>
 
 ### Improve your statistical thinking
 
