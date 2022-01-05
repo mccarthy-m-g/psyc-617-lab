@@ -1,0 +1,84 @@
+---
+title: "Help yourself: Assignment 3"
+author:
+  - name: "Michael McCarthy"
+    url: https://github.com/mccarthy-m-g
+    affiliation: "PSYC 617 Lab"
+    affiliation_url: https://github.com/mccarthy-m-g/psyc-617-lab
+repository_url: https://github.com/mccarthy-m-g/psyc-617-lab
+output:
+  distill::distill_article:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = "#>", collapse = TRUE)
+```
+
+## Prerequisites
+
+To access the datasets, help pages, and functions that we will use in this *help yourself*, load the following packages:
+
+```{r prerequisites}
+here::i_am("labs/04_dfa-manova/help-yourself_assignment-3.Rmd")
+
+library(here)
+library(tidyverse)
+library(broom)
+library(MASS, exclude = "select")
+```
+
+As well as this Help Yourself's example data:
+
+```{r example-data}
+professions <- readr::read_csv(
+  here::here("data", "help-yourself_a3.csv"),
+  col_types = "fnnnn"
+)
+```
+
+## MANOVA
+
+You can use the `manova()` function (`?manova`) to run a manova. Unsurprisingly, it uses the `aov()` function in the background, which in turn uses the `lm()` function in the background. The only new thing we need to do is create a composite variable which we can use as a dependent variable in the model. You can do this with the `cbind()` function (`?cbind`).
+
+```{r}
+professions_model <- manova(
+  cbind(roses, music, voice, light) ~ profession,
+  data = professions
+)
+```
+
+You can get a summary of the fit as usual.
+
+```{r}
+summary(professions_model)
+```
+
+And use the usual tidy method.
+
+```{r}
+broom::tidy(professions_model)
+```
+
+You can also follow up using the **emmeans** package as usual, if, for example, you wanted to do multivariate contrasts of the composite DV.
+
+```{r}
+professions_emm <- emmeans::emmeans(professions_model, specs = "profession")
+
+emmeans::contrast(professions_emm, method = "pairwise")
+```
+
+## DFA
+
+
+
+## Learning more
+
+### MANOVA
+
+- MANOVA: A Procedure Whose Time Has Passed? <https://journals.sagepub.com/doi/full/10.1177/0016986219887200>
+- Multivariate analysis versus multiple univariate analyses <https://doi.apa.org/doi/10.1037/0033-2909.105.2.302>
+- Making Meaning out of MANOVA: The Need for Multivariate Post Hoc Testing in Gifted Education Research <https://journals.sagepub.com/doi/full/10.1177/0016986219890352>
+- I Will Not Ever, NEVER Run a MANOVA (Thom Baguley) <http://psychologicalstatistics.blogspot.com/2021/08/i-will-not-ever-never-run-manova.html?m=1>
+- A truly multivariate approach to MANOVA <https://psychology.okstate.edu/faculty/jgrice/personalitylab/Grice_Iwasaki_AMR.pdf>
+- Performing multivariate group comparisons following a statistically significant MANOVA. (Methods, Plainly Speaking) <https://doi.org/10.1080/07481756.2003.12069079>
