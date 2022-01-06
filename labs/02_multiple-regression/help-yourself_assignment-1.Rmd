@@ -586,3 +586,55 @@ Note that the package has support from many of the tools we are used to using, s
 ### R
 
 - [easystats](https://easystats.github.io/easystats/)
+
+
+### Small multiples plot (for moderation)
+
+This is based on Figure 6 in "Improving Present Practices in the Visual Display of Interactions" (see link above). I did this really quickly so the code is a bit messy, but this could be cleaned up and turned into a simple function so you could do this with a single call. I did not verify whether this actually lines up with the plot in the paper either, so I would maybe check that before using or adapting this code in a report. I believe the data for the paper is openly available so this should be easy to check.
+
+```{r}
+moderator_buckets <- function(x, by = 0.5, na.rm = TRUE) {
+  bucket_points <- seq(from = -2, to = 2, by = by)
+  points <- mean(x, na.rm = na.rm) + sd(x, na.rm = na.rm) * bucket_points
+  names(points) <- paste0(bucket_points, " SD")
+  points
+}
+
+buckets_fct <- moderator_buckets(maths$teacher_quality)
+
+slope_buckets <- ggeffects::ggemmeans(
+    maths_moderation,
+    terms = c("math_interest","teacher_quality [moderator_buckets]")
+  ) %>%
+  as_tibble() %>% 
+  mutate(group = fct_relabel(group, ~ names(buckets_fct)))
+
+buckets <- moderator_buckets(maths$teacher_quality, by = 0.25)
+
+maths_buckets <- maths %>% 
+  mutate(
+    group = case_when(
+      teacher_quality <= buckets["-1.75 SD"] ~ "-2 SD",
+      between(teacher_quality, buckets["-1.75 SD"], buckets["-1.25 SD"]) ~ "-1.5 SD",
+      between(teacher_quality, buckets["-1.25 SD"], buckets["-0.75 SD"]) ~ "-1 SD",
+      between(teacher_quality, buckets["-0.75 SD"], buckets["-0.25 SD"]) ~ "-0.5 SD",
+      between(teacher_quality, buckets["-0.25 SD"], buckets["0.25 SD"]) ~ "0 SD",
+      between(teacher_quality, buckets["0.25 SD"], buckets["0.75 SD"]) ~ "0.5 SD",
+      between(teacher_quality, buckets["0.75 SD"], buckets["1.25 SD"]) ~ "1 SD",
+      between(teacher_quality, buckets["1.25 SD"], buckets["1.75 SD"]) ~ "1.5 SD",
+      teacher_quality >= buckets["-1.75 SD"] ~ "2 SD"
+  ),
+  group = fct_relevel(group, names(buckets_fct))
+)
+
+ggplot(maths_buckets, aes(x = math_interest, y = achieve)) +
+  geom_point() +
+  geom_ribbon(
+    aes(x = x, y = predicted, ymin = conf.low, ymax = conf.high),
+    data = slope_buckets,
+    alpha = 0.25
+  ) +
+  geom_line(aes(x = x, y = predicted), data = slope_buckets) +
+  facet_wrap(~ group) +
+  ggpubr::theme_pubr()
+```
