@@ -37,7 +37,7 @@ professions <- readr::read_csv(
 )
 ```
 
-## MANOVA
+## One-way MANOVA
 
 You can use the `manova()` function (`?manova`) to run a manova. Unsurprisingly, it uses the `aov()` function in the background, which in turn uses the `lm()` function in the background. The only new thing we need to do is create a composite variable which we can use as a dependent variable in the model. You can do this with the `cbind()` function (`?cbind`).
 
@@ -48,7 +48,7 @@ professions_model <- manova(
 )
 ```
 
-You can get a summary of the fit as usual.
+You can get a summary of the fit as usual. The `summary()` function (`?summary.manova`) has a `test` argument here that you can use to get different test statistics; options are "Pillai", "Wilks", "Hotelling-Lawley", or "Roy". This uses Type 1 sums of squares. If you need Type 2 or 3 you can use the `Manova()` function (?car::Manova`) from the **car** package.
 
 ```{r}
 summary(professions_model)
@@ -60,25 +60,121 @@ And use the usual tidy method.
 broom::tidy(professions_model)
 ```
 
-You can also follow up using the **emmeans** package as usual, if, for example, you wanted to do multivariate contrasts of the composite DV.
+You can get effect sizes for predictors using the **effectsize** package, same as you would in an ANOVA context.
 
 ```{r}
-professions_emm <- emmeans::emmeans(professions_model, specs = "profession")
+effectsize::omega_squared(professions_model, partial = TRUE)
+effectsize::epsilon_squared(professions_model, partial = TRUE)
+```
+
+You can also follow up using the **emmeans** package as usual, if, for example, you wanted to do univariate (planned or post hoc) contrasts of the composite DV means in each group.
+
+```{r}
+professions_emm <- emmeans::emmeans(
+  professions_model,
+  specs = "profession",
+  mult.name = "romance" # Whatever you latent variable name is 
+)
+
+professions_emm
 
 emmeans::contrast(professions_emm, method = "pairwise")
 ```
 
-## DFA
+The univariate pairwise tests will ignore the correlations among the response variables that make up the composite DV though. So it is probably more appropriate to use multivariate contrasts that do account for these correlations. However, the composite variable being tested by each multivariate contrast here is not necessarily the same as (or even similar to) the linear combination of the response variables associated with the MANOVA omnibus test. The paper "Performing multivariate group comparisons following a statistically significant MANOVA" linked below in learning more discusses this approach and only recommends taking it approach if you are using planned contrasts.
+
+Newsom notes that it can conceptualized in terms of a ratio of between-group to within-group mean squares.
+
+```{r}
+# Flipping specs and by around
+professions_emm_2 <- emmeans::emmeans(
+  professions_model,
+  specs = "profession",
+  by = "romance",
+  mult.name = "romance"
+)
+
+# These are the same as the group means used in LDA
+professions_emm_2
+
+# This plots the group means
+emmeans::emmip(professions_model, ~ profession | romance, mult.name = "romance")
+
+# Multivariate contrasts
+emmeans::mvcontrast(professions_emm_2, method = "pairwise")
+```
+
+It's worth noting where the mean estimates come from in each case above. The composite DV means are the mean of the matrix containing all DVs for each group. This means that the composite DV assumes each DV (and observation) contributes to the composite DV with equal weight.
+
+And when we condition on either the multivariate response or IV then the mean estimates are just the raw cell means for each DV.
+
+```{r}
+professions %>% 
+  group_by(profession) %>% 
+  summarize(
+    composite_mean = mean(cbind(roses, music, voice, light)),
+    roses_mean = mean(roses),
+    music_mean = mean(music),
+    voice_mean = mean(voice),
+    light_mean = mean(light)
+  )
+```
 
 
+Alternatively, you could follow up with discriminant analysis using the `candisc()` function (`?candisc::candisc`) from the **candisc** package. See the package vignette form more details <https://cran.r-project.org/web/packages/candisc/vignettes/diabetes.html>.
+
+Note: canonical discriminant analysis, linear discriminant analysis, canonical linear discriminant analysis, descriptive discriminant analysis, and discriminant function analysis are all different names for the same thing.
+
+```{r}
+professions_model_da <- candisc::candisc(professions_model, term = "profession")
+
+# Printing the fit will return LRTs for the canonical dimensions
+professions_model_da
+
+# You can use the summary method to get other details about the fit. Note that
+# the class means are the group centroids
+summary(professions_model_da, coef = c("raw", "std", "structure"))
+```
+
+## Linear discriminant analysis
+
+If you just want to do discriminant analysis on its own, you can use the `lda()` function (`?MASS::lda`) from the **MASS** package. If you want to learn more see Chapter 4, Section 4.4, of An introduction to statistical learning <https://www.statlearning.com>.
+
+```{r}
+MASS::lda(profession ~ roses + music + voice + light, data = professions)
+```
 
 ## Learning more
 
 ### MANOVA
 
-- MANOVA: A Procedure Whose Time Has Passed? <https://journals.sagepub.com/doi/full/10.1177/0016986219887200>
+Note: MANOVA is just a special case of multivariate linear regression. If you are trying to find good papers on MANOVA try searching for multivariate linear regression (and pray you find papers that don't misuse the term to mean multiple regression...). You could also save yourself the trouble and use CFA or SEM instead.
+
 - Multivariate analysis versus multiple univariate analyses <https://doi.apa.org/doi/10.1037/0033-2909.105.2.302>
-- Making Meaning out of MANOVA: The Need for Multivariate Post Hoc Testing in Gifted Education Research <https://journals.sagepub.com/doi/full/10.1177/0016986219890352>
-- I Will Not Ever, NEVER Run a MANOVA (Thom Baguley) <http://psychologicalstatistics.blogspot.com/2021/08/i-will-not-ever-never-run-manova.html?m=1>
 - A truly multivariate approach to MANOVA <https://psychology.okstate.edu/faculty/jgrice/personalitylab/Grice_Iwasaki_AMR.pdf>
+- Multivariate Analysis of Variance (Newsom) <http://web.pdx.edu/~newsomj/mvclass/ho_manova.pdf>
+
+### MANOVA follow-ups
+
+There is not a lot of good literature on this topic if you are interested in multivariate follow-ups, at least from my searches. The last paper presents an interesting approach combining multivariate contrasts and discriminant analysis.
+
 - Performing multivariate group comparisons following a statistically significant MANOVA. (Methods, Plainly Speaking) <https://doi.org/10.1080/07481756.2003.12069079>
+- Hotelling’s T2 & MANOVA Testing & understanding multivariate mean differences (Michael Friendly) <http://friendly.apps01.yorku.ca/psy6140/lectures/HotellingT2-2x2.pdf>
+- Making Meaning out of MANOVA: The Need for Multivariate Post Hoc Testing in Gifted Education Research <https://journals.sagepub.com/doi/full/10.1177/0016986219890352>
+- Some New Ways of Analyzing MANOVA Data in a Post Hoc Context <https://www.semanticscholar.org/paper/Some-New-Ways-of-Analyzing-MANOVA-Data-in-a-Post-Chou/c5ae85388036547f38772997dbfe18a8409e71a7>
+
+### Thinking critically about MANOVA
+
+- MANOVA: A Procedure Whose Time Has Passed? <https://journals.sagepub.com/doi/full/10.1177/0016986219887200>
+- I Will Not Ever, NEVER Run a MANOVA (Thom Baguley) <http://psychologicalstatistics.blogspot.com/2021/08/i-will-not-ever-never-run-manova.html?m=1>
+- Analyzing and Interpreting Significant MANOVAs (this has an interesting comparison of MANOVA and LDA to path analysis) <https://doi.org/10.3102%2F00346543052003340>
+
+### Cross Validated
+
+- How is MANOVA a case of the GLM? <https://stats.stackexchange.com/a/241858/337979>
+- What is the relationship between regression and linear discriminant analysis (LDA)? <https://stats.stackexchange.com/a/31468/337979>
+- How LDA, a classification technique, also serves as dimensionality reduction technique like PCA <https://stats.stackexchange.com/a/169483/337979>
+ 
+### R
+
+- Interaction analysis in emmeans: multivariate contrasts <https://cran.r-project.org/web/packages/emmeans/vignettes/interactions.html#multiv>
