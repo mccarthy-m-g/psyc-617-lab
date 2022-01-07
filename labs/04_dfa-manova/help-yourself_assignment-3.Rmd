@@ -120,7 +120,6 @@ professions %>%
   )
 ```
 
-
 Alternatively, you could follow up with discriminant analysis using the `candisc()` function (`?candisc::candisc`) from the **candisc** package. See the package vignette form more details <https://cran.r-project.org/web/packages/candisc/vignettes/diabetes.html>.
 
 Note: canonical discriminant analysis, linear discriminant analysis, canonical linear discriminant analysis, descriptive discriminant analysis, and discriminant function analysis are all different names for the same thing.
