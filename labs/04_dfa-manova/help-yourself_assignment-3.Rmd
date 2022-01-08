@@ -51,13 +51,13 @@ professions_model <- manova(
 You can get a summary of the fit as usual. The `summary()` function (`?summary.manova`) has a `test` argument here that you can use to get different test statistics; options are "Pillai", "Wilks", "Hotelling-Lawley", or "Roy". This uses Type 1 sums of squares. If you need Type 2 or 3 you can use the `Manova()` function (?car::Manova`) from the **car** package.
 
 ```{r}
-summary(professions_model)
+summary(professions_model, intercept = TRUE)
 ```
 
 And use the usual tidy method.
 
 ```{r}
-broom::tidy(professions_model)
+broom::tidy(professions_model, intercept = TRUE)
 ```
 
 You can get effect sizes for predictors using the **effectsize** package, same as you would in an ANOVA context.
@@ -67,7 +67,11 @@ effectsize::omega_squared(professions_model, partial = TRUE)
 effectsize::epsilon_squared(professions_model, partial = TRUE)
 ```
 
-You can also follow up using the **emmeans** package as usual, if, for example, you wanted to do univariate (planned or post hoc) contrasts of the composite DV means in each group.
+### Follow-ups
+
+#### Composite DV univariate contrasts
+
+You can follow up using the **emmeans** package as usual (i.e., in the same way you would in the ANOVA cases from PSYC 615), if, for example, you wanted to do univariate (planned or post hoc) contrasts of the composite DV means in each group.
 
 ```{r}
 professions_emm <- emmeans::emmeans(
@@ -81,9 +85,27 @@ professions_emm
 emmeans::contrast(professions_emm, method = "pairwise")
 ```
 
-The univariate pairwise tests will ignore the correlations among the response variables that make up the composite DV though. So it is probably more appropriate to use multivariate contrasts that do account for these correlations. However, the composite variable being tested by each multivariate contrast here is not necessarily the same as (or even similar to) the linear combination of the response variables associated with the MANOVA omnibus test. The paper "Performing multivariate group comparisons following a statistically significant MANOVA" linked below in learning more discusses this approach and only recommends taking it approach if you are using planned contrasts.
+I believe the univariate pairwise tests will ignore the correlations among the response variables that make up the composite DV though. The estimates for the pairwise comparisons above are just the differences between the composite means for each group, which are obtained by getting the mean of the matrix containing all DVs for each group. The mean of a matrix is obtained by summing all its elements then dividing by the total number of elements. This means that: (1) the composite DV assumes each DV (and observation) contributes to the composite DV with equal weight; (2) the the correlations among the response variables that make up the composite DV are never accounted for here.
 
-Newsom notes that it can conceptualized in terms of a ratio of between-group to within-group mean squares.
+Here's how the composite DV means are calculated just to make this explicit.
+
+```{r}
+professions %>% 
+  group_by(profession) %>% 
+  summarize(
+    composite_mean = mean(cbind(roses, music, voice, light))
+  )
+```
+
+#### Multivariate contrasts
+
+We could instead use use multivariate contrasts that do account for these correlations. Unfortunately I couldn't find much literature about this, and the functionality in emmeans is very new so there aren't many examples to work off of. You can use the `mvcontrast()` function (`?emmeans::mvcontrast`) to perform multivariate contrasts. These will use Hotelling's $T^2$, which is a multivariate generalization of the student's $t$ statistic. The corresponding standardized measure of effect you could use is Mahalanobis’ $D^2$, which is a measure of distance (i.e., similarity) between two groups. I do not believe you can obtain this using functions in emmeans. Wishart has a good paper comparing the equations for Hotelling's $T^2$, Mahalanobis’ $D^2$, and discriminant analysis <https://www.jstor.org/stable/10.2307/2985891?origin=crossref>. Theoretically you should be able to use the emmeans output to calculate Mahalanobis’ $D^2$ following the equations there, but I had trouble getting things to line up. I've left my attempts at the end.
+
+That said, Hotelling's $T^2$ can also be used as a similarity metric here if the sample size in each group is balanced. For either metric, smaller estimates indicate more similarity, and larger estimates indicate less similarity.
+
+It's also worth noting that the composite variable being tested by each multivariate contrast here is not necessarily the same as (or even similar to) the linear combination of the response variables associated with the MANOVA omnibus test. The paper "Performing multivariate group comparisons following a statistically significant MANOVA" linked below in learning more discusses this approach and only recommends taking it approach if you are using planned contrasts.
+
+To get the multivariate contrasts to work you will first need to set up a new reference grid, and specify the name of the latent variable your multiple response DVs represent using the `mult.name` argument. Then you can run the multivariate contrasts. Here we see, for example, that businessmen have the most difference in romantic behaviour from engineers and teachers.
 
 ```{r}
 # Flipping specs and by around
@@ -94,41 +116,28 @@ professions_emm_2 <- emmeans::emmeans(
   mult.name = "romance"
 )
 
-# These are the same as the group means used in LDA
+# These are the same as the group means used in LDA, which are just the cell
+# means.
 professions_emm_2
 
-# This plots the group means
-emmeans::emmip(professions_model, ~ profession | romance, mult.name = "romance")
-
-# Multivariate contrasts
-emmeans::mvcontrast(professions_emm_2, method = "pairwise")
+# Multivariate contrasts. If `show.ests = TRUE` it will return univariate 
+# contrasts for each of the response variables as well.
+emmeans::mvcontrast(professions_emm_2, method = "pairwise", show.ests = TRUE)
 ```
 
-It's worth noting where the mean estimates come from in each case above. The composite DV means are the mean of the matrix containing all DVs for each group. This means that the composite DV assumes each DV (and observation) contributes to the composite DV with equal weight.
-
-And when we condition on either the multivariate response or IV then the mean estimates are just the raw cell means for each DV.
-
-```{r}
-professions %>% 
-  group_by(profession) %>% 
-  summarize(
-    composite_mean = mean(cbind(roses, music, voice, light)),
-    roses_mean = mean(roses),
-    music_mean = mean(music),
-    voice_mean = mean(voice),
-    light_mean = mean(light)
-  )
-```
+### Discriminant analysis
 
 Alternatively, you could follow up with discriminant analysis using the `candisc()` function (`?candisc::candisc`) from the **candisc** package. See the package vignette form more details <https://cran.r-project.org/web/packages/candisc/vignettes/diabetes.html>.
 
-Note: canonical discriminant analysis, linear discriminant analysis, canonical linear discriminant analysis, descriptive discriminant analysis, and discriminant function analysis are all different names for the same thing.
+"Discriminant analysis is often used for classifying people into groups; however, in the MANOVA situation the individuals are already in the groups. The use of discriminant analysis here is to characterize major differences among the groups (Bock & Haggard, 1968). The major differences are revealed through the discriminant functions, and the problem is in interpreting these functions." Stevens (1972)
+
+Note: canonical discriminant analysis, linear discriminant analysis, canonical linear discriminant analysis, descriptive discriminant analysis, and discriminant function analysis are all different names for the same thing (as far as I can tell).
 
 ```{r}
 professions_model_da <- candisc::candisc(professions_model, term = "profession")
 
 # Printing the fit will return LRTs for the canonical dimensions
-professions_model_da
+professions_model_da$scores
 
 # You can use the summary method to get other details about the fit. Note that
 # the class means are the group centroids
@@ -137,11 +146,13 @@ summary(professions_model_da, coef = c("raw", "std", "structure"))
 
 ## Linear discriminant analysis
 
-If you just want to do discriminant analysis on its own, you can use the `lda()` function (`?MASS::lda`) from the **MASS** package. If you want to learn more see Chapter 4, Section 4.4, of An introduction to statistical learning <https://www.statlearning.com>.
+If you just want to do discriminant analysis on its own, you can use the `lda()` function (`?MASS::lda`) from the **MASS** package. If you want to learn more see Chapter 4, Section 4.4, of An introduction to statistical learning <https://www.statlearning.com>, or the MANOVA chapter in Field's textbook.
 
 ```{r}
-MASS::lda(profession ~ roses + music + voice + light, data = professions)
+MASS::lda(profession ~ roses + music + voice + light, data = professions) %>% predict()
 ```
+
+Note: discriminant analysis is just a special case of canonical correlation.
 
 ## Learning more
 
@@ -157,6 +168,7 @@ Note: MANOVA is just a special case of multivariate linear regression. If you ar
 
 There is not a lot of good literature on this topic if you are interested in multivariate follow-ups, at least from my searches. The last paper presents an interesting approach combining multivariate contrasts and discriminant analysis.
 
+- Four methods of analyzing between variation for the k-group manova problem <http://www.tandfonline.com/doi/abs/10.1207/s15327906mbr0704_7>
 - Performing multivariate group comparisons following a statistically significant MANOVA. (Methods, Plainly Speaking) <https://doi.org/10.1080/07481756.2003.12069079>
 - Hotelling’s T2 & MANOVA Testing & understanding multivariate mean differences (Michael Friendly) <http://friendly.apps01.yorku.ca/psy6140/lectures/HotellingT2-2x2.pdf>
 - Making Meaning out of MANOVA: The Need for Multivariate Post Hoc Testing in Gifted Education Research <https://journals.sagepub.com/doi/full/10.1177/0016986219890352>
@@ -177,3 +189,195 @@ There is not a lot of good literature on this topic if you are interested in mul
 ### R
 
 - Interaction analysis in emmeans: multivariate contrasts <https://cran.r-project.org/web/packages/emmeans/vignettes/interactions.html#multiv>
+
+## Attempt at understand emmeans mvcontrast in relation to Wishart's equations
+
+I'm assuming part of the issue is that emmeans is using pooled information, which causes some things not to line up. Or my algebra is bad. The mvcontrast() function's source code is here <https://github.com/rvlenth/emmeans/blob/master/R/multiv.R>. And discussion about it is here <https://github.com/rvlenth/emmeans/issues/281>.
+
+I just tried to solve for a single multivariate contrast.
+
+Multivariate contrast:
+
+contrast                       T.square df1 df2 F.ratio p.value
+Graduate student - Engineer      12.260   4 193   3.018  0.1095
+
+
+Here are the univariate contrasts underlying this (these are just mean differences of the cell means).
+
+contrast = Graduate student - Engineer:
+ romance estimate    SE  df t.ratio p.value
+ roses    -0.3777 0.419 196  -0.902  0.3679
+ music    -0.5847 0.402 196  -1.453  0.1478
+ voice     1.3035 0.474 196   2.748  0.0066
+ light     0.5346 0.501 196   1.068  0.2871
+
+The estimates as R objects.
+
+```{r}
+F_ratio <- 3.0179861
+T2 <- 12.259591
+```
+
+And other information about our sample as R objects.
+
+```{r}
+N_total <- 200
+N_contrast <- 100
+N_1 <- 50
+N_2 <- 50
+df_1 <- 4
+df_2 <- N_1 + N_2 - df_1 - 1
+df_pooled <- N_total - df_1 - 1
+```
+
+Wishart gives us the following equations.
+
+The squared mahalanobis distance is given by
+
+$$
+D^2 = d' S^{-1}d,
+$$
+
+where $d$ is the vector of mean differences on the response variables for the two groups contrasted, $d'$ is the transpose of $d$, and $S^{-1}$ is the inverted covariance matrix. In R this should be:
+
+```{r}
+mean_differences <- matrix(
+  c(-0.3777180, -0.5847266, 1.3035102, 0.5346300),
+  nrow = 4,
+  ncol = 1
+)
+
+# I'm assuming this is the covariance matrix we want
+S <- professions %>% 
+  filter(profession == "Graduate student" | profession == "Engineer") %>% 
+  select(-profession) %>% 
+  cov()
+
+D2 <- t(mean_difference) %*% solve(S) %*% mean_difference
+D2
+```
+
+This lines up with the `mahalanobis()` function, which also returns $D^2$.
+
+```{r}
+mahalanobis(
+  t(mean_difference),
+  center = FALSE,
+  cov = S
+)
+```
+
+Now, in the emmeans interactions vignette, it states that (in reference to the mvcontrast function):
+
+> In this output, the `T.square` values are Hotelling’s $T^2$ statistics, which are the squared Mahalanobis distances among the sets of four means.
+
+Given that $T^2= 12.259591$, and the value we just calculated is $D^2 = 0.44358$, I am confused where this conclusion came from. I'm guessing from here: <https://github.com/rvlenth/emmeans/issues/281#issuecomment-873608432> in response to <https://github.com/rvlenth/emmeans/issues/281#issuecomment-873527569>. This example used the `MOats` data set and an earlier version of the mvcontrast function.
+
+Mahal.d  df1 df2   F.ratio p.value
+1.755526   4   7 0.5393277 0.9174 
+
+And the math works out if we use one of Wishart's equations,
+
+$$
+\begin{align}
+T^2 &= \frac{F (p(n_1 + n_2 - 2))}{df_2} \\
+    &= \frac{0.5393277 (4(6 + 6 - 2))}{7} \\
+    &= \frac{0.5393277 (40)}{7} \\
+    &= 3.081873
+\end{align}
+$$
+
+And the square root of this is equal to the Mahalanobis distance reported above, which would mean that Hotelling’s $T^2$ is equivalent to the squared Mahalanobis distance.
+
+For our own contrasts though, we found that $T^2 = 12.259591$ and $D^2 = 0.44358$, which aren't even close. So it shouldn't be due to us pooling something differently.
+
+There are also multivariate contrast examples in Stevens (Table 8) <http://dx.doi.org/10.1207/s15327906mbr0704_7> where both $T^2$ and $D^2$ are given, and those example look closer to what I calculated, where the values are very different, with a similar ratio to what I got. 
+
+Let's see what happens if we remove emmeans output from the picture. This presumably gives the correct value of $T^2$ for an F distribution.
+
+Note: If `test = "chi"` a chi-square distribution is used instead, and this value is closer to what emmeans gives.
+
+```{r}
+professions %>% 
+  filter(profession == "Graduate student" | profession == "Engineer") %>% 
+  DescTools::HotellingsT2Test(
+    formula = cbind(roses, music, voice, light) ~ profession,
+    data = .,
+    test = "f"
+  )
+```
+
+We should be able to relate this to the $D^2$ we calculated earlier using Wishart's equations. But we can't, so I have no clue where I'm going wrong... I gave up here because I don't have time to dig into this. Some other code attempts are below.
+
+$$
+\begin{align}
+D^2 &= \frac{n_1 + n_2}{n_1 n_2} T^2 \\
+    &= \frac{100}{2500} 2.996 \\
+    &= 0.04 * 2.996 \\
+    &= 0.11984
+\end{align}
+$$
+
+```{r}
+# Trying to replicate the multivariate contrast
+grad_means <- c(6.54, 3.65, 7.94, 10.0)
+engi_means <- c(6.91, 4.23, 6.64, 9.51)
+
+grad_means - engi_means
+
+S <- professions %>% 
+  #filter(profession == "Graduate student" | profession == "Engineer") %>% 
+  select(-profession) %>% 
+  cov()
+
+mahalanobis(
+  grad_means,
+  engi_means,
+  cov = S
+  )^2
+
+(50 * 50 * 0.1880984) / 100
+
+# is this it???
+
+
+(50 * 50 * 1.010391) / 200
+```
+
+```{r}
+# Hotelling's T^2: 12.260
+numerator <- df_2
+denominator <- df_1 * (N_1 + N_2 - 2)
+
+# Equation 1 using F-ratio: This is close... 12.45316
+F_ratio * denominator / numerator
+
+# Equation 2 using D2: Not close at all.
+# Here D2 has to equal ~ 0.979999
+(N_1 * N_2 * D2) / N_total
+```
+
+```{r}
+# F-ratio: 3.0179861
+
+# Equation 1 using T2: Very close... 3.018693
+((N_total - df_1) * T2) / (df_1 * (N_total - 1))
+
+# Equation 2 using D2: Not close at all.
+((N_total * (N_total - df_1)) / (df_1 * (N_total - 1))) * D2
+```
+
+```{r}
+# Mahalanobis' D^2 using T2: These sort of line up
+((N_1 + N_2) / (N_1 * N_2)) * T2
+
+mahalanobis(
+  t(mean_difference),
+  center = FALSE,
+  cov = S
+  )
+
+# But they don't line up with the basic formula...
+t(mean_difference) %*% S^-1 %*% mean_difference
+```
+
