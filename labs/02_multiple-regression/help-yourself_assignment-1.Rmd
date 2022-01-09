@@ -536,6 +536,7 @@ mtcars %>%
     - Regression and Other Stories <https://avehtari.github.io/ROS-Examples/>
 - Exegeses on linear models <https://www.stats.ox.ac.uk/pub/MASS3/Exegeses.pdf>
 - Regression Modeling Strategies: With Applications to Linear Models, Logistic and Ordinal Regression, and Survival Analysis <http://hbiostat.org/rms/>
+- Applied Multiple Regression/Correlation Analysis for the Behavioral Sciences <https://doi.org/10.4324/9780203774441>
 
 ### Transforming variables
 
@@ -574,19 +575,23 @@ Note that the package has support from many of the tools we are used to using, s
 - Improving Present Practices in the Visual Display of Interactions <https://journals.sagepub.com/doi/10.1177/2515245917746792>
 - Precise Answers to Vague Questions: Issues With Interactions <https://journals.sagepub.com/doi/full/10.1177/25152459211007368>
 - That’s a lot to PROCESS! Pitfalls of Popular Path Models <https://psyarxiv.com/paeb7/>
+- Probing Interactions in Fixed and Multilevel Regression: Inferential and Graphical Techniques <https://doi.org/10.1207/s15327906mbr4003_5>
 - Maybe Testing the "Significance" of Simple Slopes is Useless?
  <https://quantpsych.net/simple-slopes-models-in-jasp-r/>
- - Recoding Introduction to Mediation, Moderation, and Conditional Process Analysis <https://bookdown.org/ajkurz/recoding_Hayes_2018/>
+ - Recoding "Introduction to Mediation, Moderation, and Conditional Process Analysis" (R version of Andrew Hayes' book) <https://bookdown.org/ajkurz/recoding_Hayes_2018/>
 
 ### Improve your statistical thinking
 
 - Statistics and the Scientific Method (emphasizes how regression models have not been so useful in the social sciences) <https://link.springer.com/chapter/10.1007/978-1-4613-8536-3_11>
 - How Not to Lie with Statistics: Avoiding Common Mistakes in Quantitative Political Science <https://gking.harvard.edu/files/mist.pdf>
 
+### GLM comparison
+
+- Analysis of variance---why it is more important than ever <http://www.stat.columbia.edu/~gelman/research/published/AOS259.pdf>
+
 ### R
 
 - [easystats](https://easystats.github.io/easystats/)
-
 
 ### Small multiples plot (for moderation)
 

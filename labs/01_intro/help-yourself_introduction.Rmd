@@ -136,10 +136,12 @@ That concludes our basic overview of R Markdown. We don't have time to dive into
 - PA652: Statistical Analysis by Solomon Kurz <https://osf.io/3g8vf/>
 - PSY2002: Advanced Statistics by Elizabeth Page-Gould <https://osf.io/q6wnd/>
 - Jason Newsom's Course notes for multiple regression <https://web.pdx.edu/~newsomj/mvclass/>, mixed models <https://web.pdx.edu/~newsomj/mlrclass/>, and SEM <https://web.pdx.edu/~newsomj/semclass/>
+- Practical Applications in R for Psychologists <https://github.com/mattansb/Practical-Applications-in-R-for-Psychologists>
 - Cheat Sheets for Machine Learning and Data Science <https://sites.google.com/view/datascience-cheat-sheets>
 
 ### General tips
 
+- Statistical writing <https://stats.oarc.ucla.edu/other/mult-pkg/seminars/statistical-writing/>
 - The Science of Visual Data Communication: What Works <https://doi.org/10.1177%2F15291006211051956>
 - Making the Most of Statistical Analyses: Improving Interpretation and Presentation <https://gking.harvard.edu/files/making.pdf>
 - Let’s Practice What We Preach: Turning Tables into Graphs <https://www4.stat.ncsu.edu/~davidian/st810a/gelman.pdf>
@@ -164,6 +166,7 @@ That concludes our basic overview of R Markdown. We don't have time to dive into
 
 #### Significance testing
 
+- The Difference Between “Significant” and “Not Significant” is not Itself Statistically Significant <http://www.stat.columbia.edu/~gelman/research/published/signif4.pdf>
 - Why and How We Should Join the Shift From Significance Testing to Estimation <https://www.preprints.org/manuscript/202112.0235/v1>
 - On the Surprising Longevity of Flogged Horses: Why There Is a Case for the Significance Test <https://journals.sagepub.com/doi/10.1111/j.1467-9280.1997.tb00536.x>
 - Semantic and cognitive tools to aid statistical science: replace confidence and significance by compatibility and surprise <https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-020-01105-9>

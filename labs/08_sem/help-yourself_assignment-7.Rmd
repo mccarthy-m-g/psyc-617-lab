@@ -434,6 +434,10 @@ Note: These books are good references even if you aren't doing longitudinal anal
 
 - Introduction to the Tetrachoric and Polychoric Correlation Coefficients <http://www.john-uebersax.com/stat/tetra.htm>
 
+### GLM comparison
+
+- The paired t-test as a simple latent change score model <https://doi.org/10.3389/fpsyg.2013.00738>
+
 ### Thinking critically
 
 - Thinking Twice About Sum Scores <https://psyarxiv.com/3wy47/>
