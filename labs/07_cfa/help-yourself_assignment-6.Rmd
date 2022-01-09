@@ -97,3 +97,27 @@ summary(
 ```
 
 You can now give next week's Help Yourself a look for more details on working with the lavaan package, and latent variable models more generally. Everything from next week about SEM will apply to CFA as well, as far as R goes.
+
+## Learning more
+
+### General
+
+- Applied Psychometrics: Writing-Up a Factor Analysis Construct Validation Study with Examples <http://www.scirp.org/Journal/Paperabs.aspx?paperid=87940>
+- Reporting Practices in Confirmatory Factor Analysis: An Overview and Some Recommendations <https://pubmed.ncbi.nlm.nih.gov/19271845/>
+
+### EFA vs. CFA
+
+- The Purpose and Practice of Exploratory and Confirmatory Factor Analysis in Psychological Research: Decisions for Scale Development and Validation <https://psycnet.apa.org/doi/10.1037/cbs0000069>
+
+### Thinking critically about CFA
+
+- Questionable research practices when using confirmatory factor analysis <https://doi.org/10.1108/JMP-06-2018-0272>
+- A cautionary note on testing latent variable models <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4635201/>
+- Why We Need to Abandon Fixed Cutoffs for Goodness-of-Fit Indices: A Comprehensive Simulation and Possible Solutions <https://psyarxiv.com/5qag3/>
+- Analyzing Ordinal Data with Metric Models: What Could Possibly Go Wrong? <https://papers.ssrn.com/abstract=2692323>
+
+### Measurement Invariance
+
+- A Primer to (Cross-Cultural) Multi-Group Invariance Testing Possibilities in R <https://www.frontiersin.org/article/10.3389/fpsyg.2019.01507/full>
+- Improving Multiple-Group confirmatory factor analysis in R – A tutorial in measurement invariance with continuous and ordinal indicators <https://scholarworks.umass.edu/pare/vol19/iss1/7/>
+- Applying Multigroup Confirmatory Factor Models for Continuous Outcomes to Likert Scale Data Complicates Meaningful Group Comparisons <https://doi.org/10.1207/s15328007sem1104_2>

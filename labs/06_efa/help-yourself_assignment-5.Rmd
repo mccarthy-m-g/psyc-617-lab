@@ -145,7 +145,7 @@ purrr::pluck(anxiety_model, "rot_loadings") %>%
   broom::tidy()
 ```
 
-## Other packages
+## Other packages for conducting EFA
 
 You can also use either the psych package or the lavaan package to do EFA.
 
@@ -153,6 +153,10 @@ You can also use either the psych package or the lavaan package to do EFA.
 - Yes, you can fit an exploratory factor analysis with lavaan <https://solomonkurz.netlify.app/post/2021-05-11-yes-you-can-fit-an-exploratory-factor-analysis-with-lavaan/>
 
 ## Learning more
+
+### EFA
+
+- Best practices in exploratory factor analysis: four recommendations for getting the most from your analysis <https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1156&context=pare>
 
 ### R
 
