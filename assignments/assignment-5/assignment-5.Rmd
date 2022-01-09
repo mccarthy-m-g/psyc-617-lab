@@ -1,0 +1,144 @@
+---
+title             : "Assignment 5---Exploratory Factor Analysis."
+shorttitle        : "Assignment 5"
+
+params:
+  firstname  : First
+  lastname   : Last
+  studentid  : 0123456789
+  TAs        : "Michael McCarthy"
+  show_output: FALSE
+  assignment : 5
+
+output: papaja::apa6_docx
+knit: ( function(input, ...) { source("../../R/knit.R"); knit_assignment(input, ...) })
+---
+
+```{r setup, include=FALSE}
+# Set up the here package
+here::i_am("assignments/assignment-5/assignment-5.Rmd")
+
+# Load packages
+library(here)
+library(papaja)
+library(tidyverse)
+```
+
+```{r chunk-opts, include=FALSE, code=xfun::read_utf8(here('R', 'chunk-opts.R'))}
+```
+
+# Assignment Background Part 1
+
+*From the `data` directory, please import `assignment-5_p1.csv` into R.*
+
+```{r assignment-5-data-part-1}
+
+```
+
+*The following is a newly developed Need for Chocolate scale (N-Choc; Chocula, 2004) that the author wants to use to predict patients that will be diagnosed with Count Choculitis. Your goal is to discover if the construct of Need for Chocolate is unitary (i.e., is there only one factor?).  Dr. Chocula will use the results of your analysis to improve or adjust her instrument as necessary---your input is crucial for Dr. Chocula to pursue his world domination plan to breed an army of count choculas. Below are the items that comprise the scale. A Likert-type rating scale was used by respondents, ranging from 1 (strongly disagree) to 7 (strongly agree).*
+ 
+1. *There is no nutritional value in chocolate whatsoever.*
+2. *I need chocolate before a meal.*
+3. *I need chocolate after a meal.*
+4. *I like chocolate during a meal.*
+5. *Chocolate gives me great pleasure.*
+6. *Eating chocolate is the best activity on earth.*
+7. *The mere smell of chocolate sends me into a pleasure frenzy.*
+8. *When I hear the word "life" I think chocolate.*
+9. *Chocolate contains essential nutrients.*
+10. *I could live on chocolate.*
+
+# Question 1
+
+*Conceptually, what are two differences between PCA and factor analysis [2 Marks]? Which approach is more appropriate for this analysis? [1 Mark]*
+
+Answers here.
+
+\newpage
+
+# Question 2a
+
+*Decide and state the appropriate type of analysis (PCA or EFA) for this data based on the research question. How many components/factors should we extract? Why? Which indicators would you use to evaluate your decision (describe at least two)? Include the statistics and/or figures that you are using to make this decision. [3 Marks]*
+
+Answers here.
+
+\newpage
+
+# Question 2b
+
+*Run the type of analysis you decided on for this data using a varimax rotation. What matrix (or score) do you look at to evaluate which items are most representative of each component/factor? Why is it better to look at this matrix/score (be specific!)? [2 Marks]*
+
+Answers here.
+
+\newpage
+
+# Question 2c
+
+*For the component(s) or factor(s) deemed interpretable above, which items form which component/factor? Include the appropriate estimates to support this. [2 Marks]*
+
+Answers here.
+
+\newpage
+
+# Question 2d
+
+*What would you name the component(s) or factor(s)? [1 Mark]*
+
+Answers here.
+
+\newpage
+
+# Assignment Background Part 2
+
+*From the `data` directory, please import `assignment-5_p2.csv` into R.*
+
+```{r assignment-5-data-part-2}
+
+```
+
+*After you gained renown for your work with Dr. Chocula, you became the go-to for the food industry stats. You were approached by Mr. Christie who knows that good cookies can only be made with love and therefore needs to know if his employees enjoy their work. He has put together 6 measurement items, and asked all of his employees to rate how much they agree with the following statements on a scale of 0 to 16.*
+
+1. *I am always eager to get to work* 
+2. *I am a diligent worker* 
+3. *I love the smell of fresh baked cookies* 
+4. *I am happy to put in overtime* 
+5. *Cookie Innovation – I think of new ideas in my spare time* 
+6. *I would recommend this job to a friend* 
+
+# Question 3
+
+*Using these items, decide how many factors to extract then run an EFA using a varimax rotation. Do the items all contribute (or load onto) the same Job enjoyment dimension? If not, how many dimensions are represented? [1 Mark] *
+
+Answers here.
+
+\newpage
+
+# Question 4
+
+*Conduct the same analysis using a Promax rotation. Why is there an additional matrix (i.e., the structure matrix) in the Promax rotation output compared to the output from the Varimax rotation? [1 Mark]*
+
+Answers here.
+
+\newpage
+
+# Question 5
+
+*Use an APA formatted table to present and contrast the factor loadings from the Varimax and Promax rotation analyses [2 Marks]. Describe how these two rotation methods compare in terms of component/factor loadings. [1 Mark]*
+
+Answers here.
+
+\newpage
+
+# Question 6
+
+*Which of the above rotations (Varimax or Promax) is more appropriate? Why? [1 Mark]*
+
+Answers here.
+
+\newpage
+
+# Question 7
+
+*Based on the analysis with the more appropriate rotation, name the factor(s) that account for an acceptable level of variance in the data and describe what they represent. [2 marks] Provide a suggestion to Mr. Christie on how he could improve his scale. [1 Mark]*
+
+Answers here.

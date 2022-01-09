@@ -1,0 +1,108 @@
+---
+title             : "Assignment 1---Regression, Mediation, and Moderation."
+shorttitle        : "Assignment 1"
+
+params:
+  firstname  : First
+  lastname   : Last
+  studentid  : 0123456789
+  TAs        : "Michael McCarthy"
+  show_output: FALSE
+  assignment : 1
+
+output: papaja::apa6_docx
+knit: ( function(input, ...) { source("../../R/knit.R"); knit_assignment(input, ...) })
+---
+
+```{r setup, include=FALSE}
+# Set up the here package
+here::i_am("assignments/assignment-1/assignment-1.Rmd")
+
+# Load packages
+library(here)
+library(papaja)
+library(tidyverse)
+library(broom)
+# Note: We have added the code to load a few packages for you, but you might
+# need to add code to load some more to complete the assignment. See this
+# assignment's Help Yourself for what you will need.
+
+# Load scripts
+
+# Note: If you create any plots with legends in this assignment you might need
+# to source the script for the custom APA legend function mentioned in this
+# assignment's Help Yourself.
+```
+
+```{r chunk-opts, include=FALSE, code=xfun::read_utf8(here('R', 'chunk-opts.R'))}
+```
+
+# Assignment Background
+
+*From the `data` directory, please import `assignment-1.csv` into R.*
+
+```{r assignment-1-data}
+# You can read the data in this chunk. For this first assignment we have
+# written the code for you.
+foothills <- read_csv(here("data", "assignment-1.csv"))
+```
+
+*The Foothills Primary Care Network in the Alberta Health Services (AHS) system are interested in understanding healthy living in senior citizens living in assisted living communities. These communities offer independent apartments, communal spaces, and regular visitations by care providers, and residents are typically free from major health setbacks such as stroke, dementia, immobility, and COPD. However, health researchers have noted that the absence of illness does not equate to positive health, and there is variability in the Health Index scores of the residents. Researchers wanted to better understand what predicted higher Health Index scores in the residents. As such, data was collected randomly from around the Foothills Primary Care Network pertaining to Emotional Resilience (Emotional Intelligence) of the residents, positive relationships in the assisted living community, and quality of the training of assisted living support workers.*
+
+*Most likely some combination of staff training (measured August 2018), positive relationships (measured November 2018), and emotional intelligence (measured November 2018) can account for variance in the scores of Health Index (measured March 2019).*
+
+# Question 1 Background
+
+*Abigail, a researcher who got her hands on this data, decided that running a multiple regression (to see if the combination of these three variables explained the Health Index of the residents) is the best course of action.*
+
+## Question 1a
+
+*Does the data meet the assumption(s) of this analysis? Please provide the appropriate assumptions and the necessary statistics/figures to show whether each is met or not. (4 marks). Note: No need to put figures in APA format for this question.*
+
+Answers here.
+
+\newpage
+
+## Question 1b
+
+*Run this analysis for Abigail and write her an APA results section of what you found. Please include all appropriate variable descriptions, statistics/tables (see lab notes), and brief interpretation of the results (e.g., do all predictors contribute, which is the strongest, is the equation accounting for variance, etc.). (5 marks). Hint: No need to do a regression type we didn't fully cover in lab.*
+
+# Results
+
+Answers here.
+
+\newpage
+
+# Question 2 Background
+
+*Mateo, another researcher with a bit more experience than Abigail, sees the data and suspects that the relationship between positive relationships and health index may actually be influenced by emotional intelligence.*
+
+# Question 2a
+
+*Draw/create a diagram of the model that Mateo is proposing with the variables appropriately labelled. (1 mark)*
+
+Answers here.
+
+\newpage
+
+# Question 2b
+
+*Conduct the analyses using model you specified above. Is there a significant interaction between variables? Provide the variables, the statistics (how you know), and explain what this means theoretically for the variables and for how you report the main effects. (3 marks)*
+
+Answers here.
+
+\newpage
+
+# Question 2c
+
+*Create an APA figure that shows the results from a simple slopes analysis. (3 marks)*
+
+Answers here.
+
+\newpage
+
+# Question 2d
+
+*How does the relationship between the two variables change at low level(s) of W, the mean of W, and at high level(s) of W. Please describe theoretically and provide statistics to support (i.e., the slopes and accompanying statistics at each level). (4 marks)*
+
+Answers here.

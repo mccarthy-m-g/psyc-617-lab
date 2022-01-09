@@ -1,0 +1,144 @@
+---
+title             : "Assignment 7---Structural Equation Modelling."
+shorttitle        : "Assignment 7"
+
+params:
+  firstname  : First
+  lastname   : Last
+  studentid  : 0123456789
+  TAs        : "Michael McCarthy"
+  show_output: FALSE
+  assignment : 7
+
+output: papaja::apa6_docx
+knit: ( function(input, ...) { source("../../R/knit.R"); knit_assignment(input, ...) })
+---
+
+```{r setup, include=FALSE}
+# Set up the here package
+here::i_am("assignments/assignment-7/assignment-7.Rmd")
+
+# Load packages
+library(here)
+library(papaja)
+library(tidyverse)
+```
+
+```{r chunk-opts, include=FALSE, code=xfun::read_utf8(here('R', 'chunk-opts.R'))}
+```
+
+# Assignment Background Part 1
+
+*Background: In 2008, researchers Wei & Zhang looked at the impact of internet knowledge on intention to use the internet in college students and their hypothesized path model is shown below.*
+
+```{r}
+knitr::include_graphics(here("images", "assignment-7_figure-1.png"))
+```
+
+*Now that you know all about path analysis, you are ready to read their results and rip apart, criticize, critique their results.*
+
+*Reference: Wei, L. & Zhang, M. (2008). “The impact of Internet knowledge on college students’ intention to continue to use the Internet” Information Research, 13(3) paper 348. [Available at http://InformationR.net/ir/13-3/paper348.html from 13 August, 2008]*
+
+# Question 1
+
+*What is the degrees of freedom for this model? Please show the calculation breakdown [2 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 2
+
+*Using the table below, what would you determine about the researcher’s model? Be sure to reference the appropriate thresholds. [2 marks]*
+
+```{r}
+knitr::include_graphics(here("images", "assignment-7_table-1.png"))
+```
+
+Answers here.
+
+\newpage
+
+# Question 3a
+
+*The results for the path analysis (i.e., standardized path coefficients) can be seen below.*
+
+```{r}
+knitr::include_graphics(here("images", "assignment-7_figure-2.png"))
+```
+
+*What is the total effect of perceived ease of use on intention to use? Show your calculations! [2 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 3b
+
+*If you were to run a similar experiment, with reference the results of the path analysis, please describe two potential changes you would make to the current model (i.e., removing paths or variables)? [2 marks]*
+
+Answers here.
+
+\newpage
+
+# Assignment Background Part 2
+
+*From the `data` directory, please import `assignment-7.csv` into R.*
+
+```{r load-tidy-data}
+anxiety <- read_csv(here("data", "assignment-7.csv"))
+```
+
+*Background: Quite recently, some psychiatry researchers in Taiwan looked at a SEM examining patients with schizophrenia’s quality of life (Figure 3; Lien et al., 2018). You saw that they looked at the effect of insight into ones’ mental illness on self-stigma, self-esteem, and depression, and ultimately, on their quality of life. You decide you would like to test a similar model here at UCalgary with students who have severe anxiety (diagnosed General Anxiety Disorder [GAD]). You measured 17 variables that you believe are representative of the following five latent variables:*
+
+1. *Insight into their mental illness (3 items measured)*
+2. *Self-stigma (3 items measured; affect, cognitive, and behavioural)*
+3. *Self-esteem (2 items measured)*
+4. *Depression (4 items measured)*
+5. *Quality of Life (5 items measured)*
+
+```{r}
+knitr::include_graphics(here("images", "assignment-7_figure-2.png"))
+```
+
+*Since Lien and colleagues (2018) did find some support for their model, you decide to replicate it aside from two aspects: you decide to remove the direct path from insight to quality of life (as they did not find support for that one) and all of your five variables will be latent variables.*
+
+*Reference: Lien, Y., Chang, H., Kao, Y., Tzeng, N., Lu, C., & Loh, C. (2018). Insight, self-stigma and psychosocial outcomes in Schizophrenia: A structural equation modelling approach. Epidemiology and Psychiatric Sciences, 27(2), 176-185. doi:10.1017/S2045796016000950*
+
+# Question 4a
+
+*Run the Structural Equation Model. How well does this model fit the data you collected? [2 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 4b
+
+*Provide the model diagram as a figure that includes the standardized path coefficients. Note: You do not need to replicate the layout of the original figure, just make sure your diagram is readable! [2 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 4c
+
+*Discuss the structural model of this analysis, including standardized path coefficients, R-squares, and their interpretations. [4 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 5
+
+*After the analysis, you reconsider your choice of removing the path from Insight to Quality of Life and decide to re-run the SEM while including this additional path. Does this model fit the data better than your previous one? How do you know? [2 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 6
+
+*Word spread of this study to Wellness Services and they come to you for a recommendation on improving the quality of life of their students with GAD. Given what you’ve identified in your model, what would you say to them? [2 marks] *
+
+Answers here.

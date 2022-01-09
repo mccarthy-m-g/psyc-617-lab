@@ -1,0 +1,104 @@
+---
+title             : "Assignment 3---DFA and MANOVA."
+shorttitle        : "Assignment 3"
+
+params:
+  firstname  : First
+  lastname   : Last
+  studentid  : 0123456789
+  TAs        : "Michael McCarthy"
+  show_output: FALSE
+  assignment : 3
+
+output: papaja::apa6_docx
+knit: ( function(input, ...) { source("../../R/knit.R"); knit_assignment(input, ...) })
+---
+
+```{r setup, include=FALSE}
+# Set up the here package
+here::i_am("assignments/assignment-3/assignment-3.Rmd")
+
+# Load packages
+library(here)
+library(papaja)
+library(tidyverse)
+```
+
+```{r chunk-opts, include=FALSE, code=xfun::read_utf8(here('R', 'chunk-opts.R'))}
+```
+
+# Assignment Background
+
+*From the `data` directory, please import `assignment-3.csv` into R.*
+
+```{r assignment-3-data}
+
+```
+
+*The snow patrol has hired you to help them with a problem---to get to the bottom of an age-old mystery! Can one differentiate two groups---skiers and snowboarders---in terms of these easily observable variables: the average number of aggressive vocalizations (aggressive_vocal), the average speed they are going (speed), the average number of times their head gets turned (lookaway), the average number of cliff jumps they do (cliffs), the average number of rails jibbed (jibs), and the average number of lessons they’ve had (lessons)? The snow patrol diligently measured these six variables for many skiers and snowboarders during a season, collected the data in a spreadsheet, and have asked you to perform a MANOVA, followed up by a DFA, to investigate. (Since they did all this work, let’s not tell them that skies and snowboards are quite easy to tell apart on the hill!). Note: Statistics should always be reported in APA format when possible.*
+
+# Question 1
+
+*Before beginning the analyses, explore your data for incorrect/impossible data (e.g., typos, numbers that don’t make sense) and then outliers (univariate and multivariate). With explanation and/or statistics, please describe any issues (please name the participant IDs) you found and what criteria you used to identify them (e.g., why it’s impossible, univariate decision threshold, consult PowerPoint, critical chi-square). [3 marks].*
+
+*NOTE: Because DFA is so sensitive to issues like these, please just remove/delete the entire participant if you identified an issue in their data before continuing with both the MANOVA and the DFA.*
+
+Answers here.
+
+\newpage
+
+# Question 2
+
+*What are the IVs/DVs for the MANOVA analysis? What about the DFA analysis? [1 mark]*
+
+Answers here.
+
+\newpage
+
+# Question 3
+
+*Please report only on the assumptions of MANOVA/DFA (whether they are met/violated and the statistics/figures to determine that) that involve: [4 marks]. (a)	Sample size; (b) Correlations between continuous variables (a table might be useful here), including Bartlett’s Test; (c)	Box’s M.*
+
+Answers here.
+
+\newpage
+
+# Question 4
+
+*What are the omnibus results of the overall MANOVA? Briefly report the appropriate statistics here. [1 mark]*
+
+Answers here.
+
+\newpage
+
+# Question 5
+
+*Create an APA formatted table (see PowerPoint or Page 901 of the text) that includes the unstandardized and standardized discriminant coefficients, and the structure coefficients of the DFA. Optional: You can include the classification coefficients here as well, but not necessary. [2 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 6
+
+*Using either method taught, please help the snow patrol categorize someone using the results of the DFA who has scores of: Aggressivevocal = 5, Speed = 14, Lookaway = 30, Cliffs = 10, Jibs = 7, Lessons = 3.45. Please indicate which method you are using and show your work (formulas!). [2 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 7
+
+*In terms of the accuracy of the DFA: (a) What percentage of individuals were correctly classified by the discriminant function and is this significantly better than chance level? How do you know (show your work!)? [2 marks]. (b) Is our function better at classifying skiers or snowboarders? How do you know? [1 mark]*
+
+Answers here.
+
+\newpage
+
+# Question 8
+
+*Write a brief APA results section to report the findings of the DFA only. See page 900/901 of the textbook for the format of this section (They did a three-group DFA so yours will be a bit simpler). Don’t forgot to reference the table you made above and discuss all other relevant statistics (see PowerPoint). The interpretation of the variables in the function are important here (e.g., relative contributions) so make sure to read the sample in the textbook for help with that part! No need to report on assumptions or group centroids/classification coefficient interpretation. [4 marks]*
+
+# Results
+
+Answers here.

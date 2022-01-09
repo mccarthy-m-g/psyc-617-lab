@@ -1,0 +1,118 @@
+---
+title             : "Assignment 6---Confirmatory Factor Analysis."
+shorttitle        : "Assignment 6"
+
+params:
+  firstname  : First
+  lastname   : Last
+  studentid  : 0123456789
+  TAs        : "Michael McCarthy"
+  show_output: FALSE
+  assignment : 6
+
+output: papaja::apa6_docx
+knit: ( function(input, ...) { source("../../R/knit.R"); knit_assignment(input, ...) })
+---
+
+```{r setup, include=FALSE}
+# Set up the here package
+here::i_am("assignments/assignment-6/assignment-6.Rmd")
+
+# Load packages
+library(here)
+library(papaja)
+library(tidyverse)
+```
+
+```{r chunk-opts, include=FALSE, code=xfun::read_utf8(here('R', 'chunk-opts.R'))}
+```
+
+# Assignment Background
+
+*From the `data` directory, please import `assignment-6.csv` into R.*
+
+```{r assignment-6-data}
+
+```
+
+*In your spare time, you have measured what you believe to be two latent constructs using two scales (see data file for variable names). You’ve done extensive background reading and have a strong hypothesis that these two scales should exclusively tap into their own construct. You have also cleaned the data already and the current data set is all ready for analysis.*
+
+*The items from the first scale were:*
+
+1. *I love spending time in front of the TV*
+2. *I need to be in a place where I can easily access snacks*
+3. *I feel comfortable when I am sheltered*
+
+*The items from the first scale were:*
+
+1. *I need to be in a place where I am close to trees*
+2. *I love spending time in fresh air*
+3. *I feel comfortable being in all types of weather*
+
+# Question 1
+
+*Name the two latent constructs you are attempting to measure. [1 Mark]*
+
+Answers here.
+
+\newpage
+
+# Question 2
+
+*Model 1: Just for interest sake, fit a single latent variable model. Provide the model diagram you have created and include the degrees of freedom calculation (including where the unknown parameters are coming from and the calculation for the known). [2 Marks]*
+
+Answers here.
+
+\newpage
+
+# Question 3a
+
+*Model 2: Run a two latent variable model with uncorrelated variables. Provide the model diagram you have created and include the df calculation. [2 Marks]*
+
+Answers here.
+
+\newpage
+
+# Question 3b
+
+*Model 2: Examine the absolute and relative model fit measures. What are your conclusions? Please reference several indices and what they mean, including the omnibus chi-square test. [2 Marks]*
+
+Answers here.
+
+\newpage
+
+# Question 4a
+
+*Model 3: Run a two latent variable model allowing for the two latent variables to be correlated. Examine the absolute and relative model fit indices. What are your conclusions? Please reference several indices and what they mean. [2 Marks]*
+
+Answers here.
+
+\newpage
+
+# Question 4b
+
+*You need to determine, out of the three models you ran, which model is best. Conduct and describe all model comparisons. Which is the "best" model? How do you know? [3 Marks]*
+
+Answers here.
+
+\newpage
+
+# Question 4c
+
+*What are the coefficients/correlations showing in the "best" model? What are your conclusions? [2 Marks]*
+
+Answers here.
+
+\newpage
+
+# Question 5
+
+*Summarize these findings in an APA results section with emphasis on the "best" model. [6 marks]. This section should include:*
+
+(1) *Final diagram for the "best" model.*
+(2) *Table summarizing model fit measures for Models 1, 2, and 3.*
+(3) *Table for the "best" model coefficients/correlations.*
+
+# Results
+
+Answers here.

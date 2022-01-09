@@ -1,0 +1,90 @@
+---
+title             : "Assignment 2---Logistic Regression."
+shorttitle        : "Assignment 2"
+
+params:
+  firstname  : First
+  lastname   : Last
+  studentid  : 0123456789
+  TAs        : "Michael McCarthy"
+  show_output: FALSE
+  assignment : 2
+
+output: papaja::apa6_docx
+knit: ( function(input, ...) { source("../../R/knit.R"); knit_assignment(input, ...) })
+---
+
+```{r setup, include=FALSE}
+# Set up the here package
+here::i_am("assignments/assignment-2/assignment-2.Rmd")
+
+# Load packages
+library(here)
+library(papaja)
+library(tidyverse)
+```
+
+```{r chunk-opts, include=FALSE, code=xfun::read_utf8(here('R', 'chunk-opts.R'))}
+```
+
+# Assignment Background
+
+*From the `data` directory, please import `assignment-2.csv` into R.*
+
+```{r assignment-2-data}
+offenders <- read_csv(here("data", "assignment-2.csv"), col_types = "ffnnnnf") %>% 
+  mutate(
+    reoffend = fct_relevel(reoffend, "no", "yes"),
+    parent_offender = fct_relevel(parent_offender, "no", "yes")
+  )
+```
+
+*It can be very valuable information to determine the likelihood that a juvenile offender will reoffend. A motivated researcher decided to collect information on this topic. He looked to court records from 5 years ago and for each case, looked at the length of stay in a correctional facility assigned for that offence (in months), the severity of the case on a 10 point scale (vandalism being an example of the lowest value 1 and first degree murder an example of the highest value 10) and whether they reoffended in the last 5 years (yes/no). He also collected data on the age of the individual’s first offence, the total number of prior offences, and whether one of their parents had been convicted of an offence.*
+
+# Question 1
+
+*Look at the data. Are there any outliers? Is there any missing or impossible data? Describe the steps that you use to check for outliers, missing, and impossible data, report the statistics that you used, and report any actions you take to address what you find, if any. [4 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 2
+
+*Run a logistic regression including all variables other than parental offence history. What is the chi-square? What does this value indicate for your data? [2 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 3
+
+*How well is this model classifying the data? [1 mark]*
+
+Answers here.
+
+\newpage
+
+# Question 4
+
+*Run a second logistic regression model that includes all of the variables in the last analysis, as well as parental offence history. How can we test whether the addition of parental offence history improves the overall model? Provide this test value (showing your calculations) and state what it means. [3 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 5
+
+*What is the odds ratio for age of first offence (show your calculation)?  How would you interpret this value? [2 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 6
+
+*Write an APA results section of what you found in the second logistic regression that included parental offence history. [ 8 marks] Please include: (1) Descriptions of your variables (predictors and DV). (2) Relevant statistics for logistic regression (see lab notes for format). (3) Brief interpretation of the results (e.g., do all predictors contribute, is the model accounting for variance, what do the odds ratios mean for the direction of change, etc.). Note: no need to report on assumptions or data cleaning, as long as nothing changed from the steps you took in question 1.*
+
+# Results
+
+Answers here.

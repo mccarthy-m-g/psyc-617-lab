@@ -1,0 +1,114 @@
+---
+title             : "Assignment 4---Multilevel Modelling."
+shorttitle        : "Assignment 4"
+
+params:
+  firstname  : First
+  lastname   : Last
+  studentid  : 0123456789
+  TAs        : "Michael McCarthy"
+  show_output: FALSE
+  assignment : 4
+
+output: papaja::apa6_docx
+knit: ( function(input, ...) { source("../../R/knit.R"); knit_assignment(input, ...) })
+---
+
+```{r setup, include=FALSE}
+# Set up the here package
+here::i_am("assignments/assignment-4/assignment-4.Rmd")
+
+# Load packages
+library(here)
+library(papaja)
+library(tidyverse)
+```
+
+```{r chunk-opts, include=FALSE, code=xfun::read_utf8(here('R', 'chunk-opts.R'))}
+```
+
+# Assignment Background
+
+*From the `data` directory, please import `assignment-4.csv` into R.*
+
+```{r assignment-4-data}
+
+```
+
+*Dodge ball: the sport of champions. Nothing says athleticism like spastically dodging spiraling balls flung towards your head. However, being the true scientist that he is, Dr. Panda believes that performance in dodge ball is not due to pure physical prowess alone. As such, he has capitalized on a Calgary Recreation sponsored tournament to test his theory that Monster energy drinks puts players into RAGE mode and dramatically increase their ball throwing ability. Using a team of confederates, he infiltrates the tournament to monitor Monster consumption and the amount of hits that each player gets. Specifically, Dr. Panda is interested in three hypotheses:*
+ 
+1. *RAGE mode exists. That is, Monster consumption relates to hit accuracy.* 
+2. *RAGE mode exists when taking into account team membership (hint: there is more than one way to test this using multilevel models)*
+3. *Players who have not had previous caffeine exposure don’t enter RAGE mode as often (i.e., there is a lower relationship for them; coded as 0 is no exposure, 1 is yes exposure)*
+ 
+*Note: You are not expected to do any data cleaning or checking assumptions for this assignment – please run the analysis with the dataset as is.*
+
+# Question 1
+
+*Build the null model for hypothesis two in R. What does this model represent? Report the ICC and indicate what this value means (in general and specific to this model & data). [3 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 2
+
+*Based on the results of the null model, indicate whether or not it would be wise to interpret the results from hypothesis one. Explain why or why not. [2 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 3a
+
+*What level of the design is being addressed by hypotheses two? [1 mark]*
+
+Answers here.
+
+\newpage
+
+# Question 3b
+
+*Write out the equation for a model that addresses hypothesis 2. What are the random effects? What are the fixed effects? [3 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 3c
+
+*Build the model from 3b in R. Is this model a better fit for the data than the null model? How do you know (report the relevant statistics)? [2 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 3d
+
+*There are two models that can test this hypothesis. Build the other model in R. Is this new model a better fit for the data than the model you built in 3c? How do you know (report the relevant statistics)? Based on the best fitting model (from either 3c or 3d), what can you conclude about hypothesis two? [3 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 4a
+
+*What type of effect are you investigating in hypothesis three? Provide the level of the effect, whether it is random or fixed, and if it is a main effect or interaction. [2 marks]*
+
+Answers here.
+
+\newpage
+
+# Question 4b
+
+*What would you need to change in your data before building this model in R? [1 mark] Be specific about the type of change (and why you chose this type), and how you make that change. [2 marks] Note: You are not expected to actually make this change or build this model in R.*
+
+Answers here.
+
+\newpage
+
+# Question 5
+
+*Why don’t we group-mean centre level 2 variables in multilevel models with two levels? [1 mark]*
+
+Answers here.
