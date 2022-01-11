@@ -114,13 +114,21 @@ That concludes our basic overview of R Markdown. We don't have time to dive into
 
 ## Learning more
 
+Each week I will also include a learning more section like this one. You don't have to read anything here, but you might like to. Most of these are things I found helpful, useful, or insightful for my own learning and thinking about statistics. Some are things that looked interesting but that I haven't had a chance to read yet.
+
+If I've shared something that isn't particularly good, please flag it for me. Or if you've come across something that you think should be included but isn't, please let me know!
+
+### PSYC 615 R Materials
+
+- We'll refer to these occasionally since PSYC 615 mainly just covered special cases of the methods covered in this course <https://github.com/mccarthy-m-g/psyc-615-lab>
+
 ### From the R for Data Science book
 
--   R basics <https://r4ds.had.co.nz/workflow-basics.html>
--   An introduction to RStudio projects <https://r4ds.had.co.nz/workflow-projects.html>
--   An introduction to R Markdown <https://r4ds.had.co.nz/r-markdown.html>
--   More details on tibbles and data wrangling in R <https://r4ds.had.co.nz/wrangle-intro.html>
--   Details on pipes (`%>%`) in R (we did not cover pipes in this Help Yourself but we will use them in future code examples) <https://r4ds.had.co.nz/pipes.html>
+- R basics <https://r4ds.had.co.nz/workflow-basics.html>
+- An introduction to RStudio projects <https://r4ds.had.co.nz/workflow-projects.html>
+- An introduction to R Markdown <https://r4ds.had.co.nz/r-markdown.html>
+- More details on tibbles and data wrangling in R <https://r4ds.had.co.nz/wrangle-intro.html>
+- Details on pipes (`%>%`) in R (we did not cover pipes in this Help Yourself but we will use them in future code examples) <https://r4ds.had.co.nz/pipes.html>
 
 ### Styling and formatting your R code for readability
 
@@ -148,6 +156,8 @@ That concludes our basic overview of R Markdown. We don't have time to dive into
 
 ### Stats books
 
+- Statistical Rethinking <https://xcelab.net/rm/statistical-rethinking/>
+    - Online lectures for the book <https://youtu.be/cclUd_HoRlo>
 - Serious Stats: A guide to advanced statistics for the behavioral sciences <https://www.bloomsbury.com/us/serious-stat-9780230577183/>
 
 ### Real data sets for practice
