@@ -160,6 +160,10 @@ If I've shared something that isn't particularly good, please flag it for me. Or
     - Online lectures for the book <https://youtu.be/cclUd_HoRlo>
 - Serious Stats: A guide to advanced statistics for the behavioral sciences <https://www.bloomsbury.com/us/serious-stat-9780230577183/>
 
+### Math books
+
+- A Mathematical Primer for Social Statistics (this is a nice reference for maths if you didn't learn or forgot certain things) <https://socialsciences.mcmaster.ca/jfox/Books/MathPrimer/index.html>
+
 ### Real data sets for practice
 
 - Richard Morey's data packs <https://github.com/richarddmorey/ExampleDatasets>
