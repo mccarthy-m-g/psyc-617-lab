@@ -495,6 +495,129 @@ aov(awesomeness ~ bdayquarter, data = birthdays) %>%
   emmeans::contrast(method = "pairwise", adjust = "tukey")
 ```
 
+## Mediation
+
+### DAGs and causal inference
+
+This applies to moderation as well, but it felt easier to bring up here. Both moderation and mediation analyses imply some sort of causal relationship between your variables, and as Tom notes in his lecture, if you're going to use these analyses you should be using a study design that supports you inferring these relationships. Directed Acyclic Graphs (DAGs) give us a way to display our *assumptions* about the relationship between variables we're modelling, and to think more clearly about what we're actually doing. I recommend you read the following to get acquainted with DAGs and causal inference:
+
+- An Introduction to Directed Acyclic Graphs <https://cran.r-project.org/web/packages/ggdag/vignettes/intro-to-dags.html>
+- Thinking Clearly About Correlations and Causation: Graphical Causal Models for Observational Data <https://journals.sagepub.com/doi/full/10.1177/2515245917745629>
+- Mediators Confounders and Colliders, oh my! <https://biostat.app.vumc.org/wiki/pub/Main/ContinuingEdu/CTSaunders_CausalDiagrams.pdf>
+
+You can create a DAG using the `dagify()` function (`?ggdag::dagify`) from the **ggdag** package. It uses the familiar formula syntax to construct paths to and from the various nodes in the graph. The vignette for the package gives a nice introduction <https://cran.r-project.org/web/packages/ggdag/vignettes/intro-to-ggdag.html>, so I'll just go over the process briefly.
+
+```{r}
+library(ggdag)
+
+mediation_dag <- ggdag::dagify(
+  job_seek ~ treat,
+  depress2 ~ treat + job_seek,
+  exposure = "treat",
+  outcome = "depress2"
+)
+```
+
+You can return a data frame with the layout of the DAG using the `tidy_dagitty()` function (`?ggdag::tidy_dagitty`).
+
+```{r}
+ggdag::tidy_dagitty(mediation_dag)
+```
+
+And you can plot your DAG with the `ggdag()` function (`?ggdag::ggdag`). The ggdag package also comes with a number of function to help with causal analysis of DAGs; see the vignettes linked above for more details. 
+
+```{r}
+ggdag::ggdag(mediation_dag, layout = "circle") +
+  ggdag::theme_dag_blank()
+```
+
+## Mediation analysis
+
+There are a few ways to actually do mediation analysis. We'll start with the method that is conceptually simpler but obtuse, then we'll go over a method that uses concepts you will not learn until the last lab but is more transparent about what you're modelling.
+
+### Simple but obtuse
+
+You can use the `mediate()` function (`?mediation::mediate`) from the mediation package to... do a mediation analysis. A nice overview of the package is available here: mediation: R Package for Causal Mediation Analysis <https://cran.r-project.org/web/packages/mediation/vignettes/mediation.pdf>. One of the cool things about this package is that you can use it to test mediation in more than just simple linear models; for example, it also supports generalized linear models, generalized additive models, and mixed effects models.
+
+For our example we'll use the Job Search Intervention Study experiment data (`?mediation::jobs`) that comes with the mediation package. The treatment here is whether or not a participant was randomly selected for the JOBS II training program; the mediator is `job_seek`, a continuous scale measuring the level of job-search self-efficacy with values from 1 to 5; and the response is `depress2`, a measure of depressive symptoms post-treatment.
+
+Note that for small samples (e.g., 20-80 cases) bootstrapped confidence intervals have "have insufficient statistical power to provide a rigorous hypothesis test", see: <https://pubmed.ncbi.nlm.nih.gov/24731180/>
+
+```{r}
+library(mediation)
+
+# First fit a model for the mediator
+jobs_model_b <- lm(job_seek ~ treat, data = jobs)
+
+# Next fit a model for the outcome
+jobs_model_c <- lm(depress2 ~ treat + job_seek, data = jobs)
+
+# Set a seed so the random samples from the bootstrap are reproducible
+set.seed(666)
+
+# Then do a mediation test
+jobs_model_ab <- mediation::mediate(
+  jobs_model_b,
+  jobs_model_c,
+  boot = TRUE,
+  sims = 50, # You probably want 1000 or more for a real analysis
+  treat = "treat",
+  mediator = "job_seek"
+)
+
+summary(jobs_model_ab)
+plot(jobs_model_ab)
+```
+
+This also supports the usual tidy method.
+
+```{r}
+broom::tidy(jobs_model_ab)
+```
+
+### Complex but transparent
+
+Rather than fitting separate regression models, we can instead do a path analysis. You aren't expected to understand this right now (we will cover path analysis in the final lab), but here are links if you are curious:
+
+- lavaan mediation tutorial <https://lavaan.ugent.be/tutorial/mediation.html>
+- Testing indirect effects/mediation in R <https://nmmichalak.github.io/nicholas_michalak/blog_entries/2018/nrg01/nrg01.html>
+- How to Do Mediation Scientifically <https://blog.methodsconsultants.com/posts/how-to-do-mediation-scientifically/>
+
+Note that the estimates are identical and the bootstrapped CIs are approximately the same.
+
+```{r}
+library(lavaan)
+
+# First define the path model
+jobs_mediation_model <- ("
+  # `a` path
+  job_seek ~ a*treat
+  
+  # `b` path
+  depress2 ~ b*job_seek
+
+  # `c` prime path 
+  depress2 ~ c*treat
+  
+  # Indirect and total effects
+  ab := a * b
+  total := c + ab
+")
+
+# Set a seed so the random samples from the bootstrap are reproducible
+set.seed(666)
+
+# Fit the model
+fit_jobs_mediation_model <- lavaan::sem(
+  jobs_mediation_model,
+  data = jobs,
+  se = "bootstrap",
+  bootstrap = 50
+)
+
+summary(fit_jobs_mediation_model, ci = TRUE)
+```
+
 ## Non-linear Multiple Regression
 
 We can use polynomials to model nonlinear relationships. We'll use the `mtcars` data (`?mtcars`) here since it has some non-linear relationships between its variables.
@@ -579,6 +702,10 @@ Note that the package has support from many of the tools we are used to using, s
 - Maybe Testing the "Significance" of Simple Slopes is Useless?
  <https://quantpsych.net/simple-slopes-models-in-jasp-r/>
  - Recoding "Introduction to Mediation, Moderation, and Conditional Process Analysis" (R version of Andrew Hayes' book) <https://bookdown.org/ajkurz/recoding_Hayes_2018/>
+- How do DAGs help to reduce bias in causal inference? <https://stats.stackexchange.com/a/445606/337979>
+- Small sample mediation testing: misplaced confidence in bootstrapped confidence intervals <https://pubmed.ncbi.nlm.nih.gov/24731180/>
+- Mediation, confounding, and measurement error <https://rpsychologist.com/mediation-confounding-ME>
+- Modelling treatment-effect heterogeneity in randomized controlled trials of complex interventions (psychological treatments) <https://doi.org/10.1002/sim.2891>
 
 ### Improve your statistical thinking
 
