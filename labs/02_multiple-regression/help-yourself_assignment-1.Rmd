@@ -583,7 +583,7 @@ Rather than fitting separate regression models, we can instead do a path analysi
 - Testing indirect effects/mediation in R <https://nmmichalak.github.io/nicholas_michalak/blog_entries/2018/nrg01/nrg01.html>
 - How to Do Mediation Scientifically <https://blog.methodsconsultants.com/posts/how-to-do-mediation-scientifically/>
 
-Note that the estimates are identical and the bootstrapped CIs are approximately the same.
+Note that the estimates are identical and the bootstrapped CIs are approximately the same in this example; however, taking this approach instead has a number of advantages. See: <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4054581/>. It also fits nicely with the DAGs discussed above, since path analyses are DAGs themselves. See: <https://cran.r-project.org/web/packages/dagitty/vignettes/dagitty4semusers.html>.
 
 ```{r}
 library(lavaan)
