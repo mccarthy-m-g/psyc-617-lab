@@ -62,7 +62,7 @@ And if that isn't bad enough:
 
 I kid you not.
 
-Watch out for the terminology, but don't let it get in the way. Pick whichever term you like. I'm partial to linear mixed effect models (or mixed models for short) so I'll be going with that here.
+Watch out for the terminology, but don't let it get in the way. Pick whatever term you like. I'm partial to linear mixed effect models (or mixed models for short) so I'll be going with that here.
 
 ## Linear models
 
@@ -82,9 +82,33 @@ sales %>%
   dplyr::distinct(dealership)
 ```
 
-It would probably be good to model which dealership a salesperson belongs to, so our model better matches reality. There are likely differences between dealerships that affect a salesperson's sales, and we want to account for that.
+It would probably be good to model which dealership a salesperson belongs to, so our model better matches reality. There are likely differences between dealerships that affect a salesperson's sales, and we want to account for that. Currently, our simple linear model above ignores any variation between dealerships since it excludes the categorical predictor of dealership from the model (Gelman and Hill refer to this as a complete pooling model).
 
-We can use the `lmer()` function (`?lme4::lmer`) from the **lme4** package to fit linear mixed effects models to explore these relationships. Note that the lme4 package also has a `glmer()` function for fitting generalized linear mixed effects models, and an `nlmer()` function for fitting nonlinear mixed effects models. You may also be interested in the **glmmTMB** package, which can everything the lme4 package can and more. And if you need even more flexibility then you can use the **brms** package, which takes a Bayesian approach.
+One option to deal with this would be to fit separate models for each dealership (no pooling). However, this will end up overstating the variation between dealerships, making them look more different than they actually are.
+
+```{r}
+# You don't need to understand this code, but essentially all it's doing is
+# looping over the different dealerships, fitting a separate model for each.
+sales %>% 
+  dplyr::distinct(dealership) %>% 
+  tibble::deframe() %>% 
+  purrr::set_names() %>% 
+purrr::map(
+  ~ {
+    sales %>% 
+      dplyr::filter(dealership == .x) %>% 
+      lm(sales ~ years_experience, data = .)
+  }
+)
+
+# Alternatively you could use the lme4::lmList() function, which does the same
+# thing.
+lme4::lmList(sales ~ years_experience | dealership, data = sales)
+```
+
+If we instead use a linear mixed effects model---which uses partial pooling---we can find a middle ground between the complete pooling and no pooling approaches.
+
+We can use the `lmer()` function (`?lme4::lmer`) from the **lme4** package to fit linear mixed effects models to explore these relationships. Note that the lme4 package also has a `glmer()` function for fitting generalized linear mixed effects models, and an `nlmer()` function for fitting nonlinear mixed effects models. You may also be interested in the **glmmTMB** package, which can do everything the lme4 package can and more. And if you need even more flexibility then you can use the **brms** package, which takes a Bayesian approach.
 
 The lme4 package has its own formula syntax. It's the same as what you're used to for the most part, but has a bit extra so you can specify random effects. We'll build a few models to show how it works.
 
@@ -100,12 +124,12 @@ sales_null_model <- lm(sales ~ 1, data = sales)
 summary(sales_null_model)
 ```
 
-If we want to take dealership into account, we can build an intercept only linear mixed effects model where the intercept is a random effect. This will give us coefficient estimates for the fixed and random effects.
+If we want to take dealership into account, we can build an intercept only linear mixed effects model where the intercept is a random effect. This will give us coefficient estimates for the fixed and random effects. The random effect here shows the amount of variation in the intercept for sales between dealerships. We specify the random intercept in the formula like: `(1 | group)`.
 
 ```{r}
 sales_null_mixed_model <- lme4::lmer(sales ~ 1 + (1 | dealership), data = sales)
 
-summary(sales_null_model)
+summary(sales_null_mixed_model)
 ```
 
 We can also compare these models with a likelihood ratio test using the `anova()` function.
@@ -114,7 +138,7 @@ We can also compare these models with a likelihood ratio test using the `anova()
 anova(sales_null_mixed_model, sales_null_model, test = "LRT")
 ```
 
-### Random intercept model
+### Random intercept model with a predictor
 
 Now let's add the predictor back. First in the linear model.
 
@@ -137,19 +161,19 @@ summary(sales_mixed_model_1)
 
 ### Random intercept and slope model
 
-There are two ways to add random slopes to a mixed model. The first is to have an uncorrelated random intercept and slope.
+There are two ways to add random slopes to a mixed model with a random intercept. The first is to have an uncorrelated random intercept and slope. We specify this in the formula like: `(1 + x || group)`.
 
 ```{r}
-# FIXME: Not converging!
+# Note that this model is not converging! We'll deal with that shortly.
 sales_mixed_model_2 <- lme4::lmer(
-  sales ~ years_experience + (1 | dealership) + (0 + years_experience | dealership),
+  sales ~ years_experience + (1 + years_experience || dealership),
   data = sales
 )
 
 summary(sales_mixed_model_2)
 ```
 
-The second is to have a correlated random intercept and slope.
+The second is to have a correlated random intercept and slope. We specify this in the formula like: `(1 + x | group)`. You'll note now that there's an additional column in the random effects output showing the correlation between the random intercept and slope.
 
 ```{r}
 sales_mixed_model_3 <- lme4::lmer(
@@ -161,6 +185,8 @@ summary(sales_mixed_model_3)
 ```
 
 Including correlations between the random intercept and slope may lead to overly complex models, so model comparisons might help you decide whether or not to include it.
+
+These are not the only random effects structures you can specify, for instance, see <https://arxiv.org/pdf/1406.5823.pdf>. But they are all you need to know for lab.
 
 ## Convergence issues
 
@@ -196,7 +222,7 @@ Under `theta`:
 
 Making a decision:
 
-- Here I'm going to decide the convergence issues were a false positive, and we don't need to worry about the single case of singularity. This may or may not be the right decision. When you run into issues like this it's good to take some perspective and ask if what you're trying to do statistically is appropriate given the data available to you. Doing further exploratory data analysis might help here, and again, if you go into this with a priori theory and hypotheses as well.
+- Here I'm going to decide the convergence issues were a false positive, and we don't need to worry about the single case of singularity. This may or may not be the right decision. When you run into issues like this it's good to take some perspective and ask if what you're trying to do statistically is appropriate given the data available to you. Doing further exploratory data analysis might help here, and again, if you go into this with a priori theory and hypotheses that will help as well.
 - It might also be beneficial to decide how you will deal with convergence issues before running any statistical tests. Convergence issues are common, and coming in with a plan will reduce the chances you make a bad decision after seeing some results.
 
 Anyways, since we've decided the convergence issues were a false positive, we can either move on with the model as is, or refit with one of the optimizers that converged. Here we'll refit just to demonstrate how to select different optimizers. The `lmerControl()` function (`?lme4::lmerControl`) has a number of arguments that allow you to control how mixed model fitting is done.
@@ -212,6 +238,8 @@ summary(sales_mixed_model_4)
 ```
 
 As with everything else, we should be transparent about what we did here in our statistical report. Even if we don't run into convergence issues, we should still declare the optimization algorithm we chose in our report (and cite its authors!). If you stick with the default optimizer, you can see what that is on the `?lme4::lmerControl` help page.
+
+Here is some further reading for those interested:
 
 - Using allFit() with (g)lmer <https://joshua-nugent.github.io/allFit/>
 - How scared should we be about convergence warnings in lme4? <https://stats.stackexchange.com/questions/110004/how-scared-should-we-be-about-convergence-warnings-in-lme4>
@@ -257,7 +285,7 @@ parameters::model_parameters(sales_mixed_model_4, ci_method = "kenward")
 # - We also get singularity warnings on around 27% of the iterations, and the 
 # CIs for the random effects correlation do not look trustworthy. Perhaps another
 # reason to rethink including random slopes.
-parameters::model_parameters(sales_mixed_model_4, ci_method = "boot", iterations = 1000)
+parameters::model_parameters(sales_mixed_model_4, ci_method = "boot", iterations = 100)
 
 # Likelihood profile
 # Notes:
@@ -270,7 +298,7 @@ For likelihood ratio tests they can be performed as usual with the `anova()` fun
 
 You should report whatever approach you choose somewhere in your report so the reader knows what you did. It might also be good to see how well the different approaches agree if you didn't make a principled decision (and contingency plan) before looking at the results.
 
-Finally, you if you choose to go with Kenward-Roger or Satterthwaite approximation, you may also be interested in the **lmerTest** package. It's a commonly used package which adds approximated degrees of freedom and p-values to the output of the `summary()` and `anova()` functions of `lmer()` output. See the `?lmerTest::summary.lmerModLmerTest` and `?lmerTest::anova.lmerModLmerTest` help pages.
+Finally, you if you choose to go with Kenward-Roger or Satterthwaite approximation, you may also be interested in the **lmerTest** package. It's a commonly used package that adds approximated degrees of freedom and p-values to the output of the `summary()` and `anova()` functions of `lmer()` output. See the `?lmerTest::summary.lmerModLmerTest` and `?lmerTest::anova.lmerModLmerTest` help pages.
 
 ## Effect size (ICC)
 
@@ -280,7 +308,7 @@ The `icc()` function (`?performance::icc`) from the performance package can be u
 performance::icc(sales_mixed_model_4)
 ```
 
-TODO: Are standardized fixed coefficients okay?
+Standardized coefficient estimates for the fixed effects can be obtained using the `standardize_parameters()` function (`?effectsize::standardize_parameters`) from the effectsize package. By default this works by refitting the model with a standardized version of the data, but there are other methods available detailed in the help page.
 
 ```{r}
 effectsize::standardize_parameters(sales_mixed_model_4)
@@ -338,7 +366,7 @@ sales_mixed_model_5 <- sales %>%
 summary(sales_mixed_model_5)
 ```
 
-And you can follow up with the **emmeans** package as usual, with either the `emmeans()` or `emtrends()` functions. This is a bad example since the coefficient for female in the model is the same as pairwise test we get in the follow-up, but you get the point. There is one new thing to note: When constructing the reference grid we can choose how degrees of freedom are approximated (as we did above, but with less options).
+And you can follow up with the **emmeans** package as usual, with either the `emmeans()` or `emtrends()` functions. This is a bad example since the coefficient for female in the model is the same as the pairwise test we get in the follow-up, but you get the point. There is one new thing to note: When constructing the reference grid we can choose how degrees of freedom are approximated (as we did above, but with less options).
 
 ```{r}
 sales_mixed_emm <- emmeans::emmeans(
@@ -437,6 +465,21 @@ $$
 You can also use the `tex_preview()` function (`?texPreview::tex_preview`) from the **texPreview** package to preview equations in the RStudio viewer. This requires some additional setup, described here <https://github.com/yonicd/texPreview#functionality>.
 
 NOTE: FOR THE ASSIGNMENT I WILL NOT ACCEPT THIS FORM OF NOTATION; USE THE NOTATION FROM TOM'S LECTURE.
+
+Here's some math code you can use as a scaffold if you want a nice layout for equations on the assignment that looks like the lecture slides.
+
+$$
+\begin{alignat}{3}
+& \text{Level 1:} \qquad &
+  a &= b + c \\
+& \text{Level 2:} \qquad &
+  d &= e + f \\
+&                        &
+  g &= h + i \\ \\
+& \text{Substitution:}  \qquad &
+  a &= b + c
+\end{alignat}
+$$
 
 ## Learning more
 
