@@ -348,7 +348,7 @@ This is quite cool, I think, as it ties nearly everything you have learned in PS
 
 ## Full circle
 
-Last thing in the course! Hopefully this drives home the point that you shouldn't take a cookbook approach to statistics. You may have been taught that way, but you do not need to think that way. We're going to use the very first data set you did a student's t-test on in PSYC 615 for this one, but we're now going to do the t-test as a structural equation model. This answer about using SEM to run one-way and two-way ANOVAs on Cross Validated makes a good reference for the various ways to do this <https://stats.stackexchange.com/a/453558/337979>.
+Last thing in the course! Hopefully this drives home the point that you shouldn't take a cookbook approach to statistics. You may have been taught that way, but you do not need to think that way. We're going to use the very first data set you did a student's t-test on in PSYC 615 for this one, but we're now going to do the t-test as a path model. This answer about using SEM to run one-way and two-way ANOVAs on Cross Validated makes a good reference for the various ways to do this <https://stats.stackexchange.com/a/453558/337979>.
 
 ```{r}
 spiders <- readr::read_csv(
@@ -363,7 +363,7 @@ Here's the student's t-test.
 t.test(anxiety ~ group, var.equal = TRUE, data = spiders)
 ```
 
-Here's the student's t-test as a structural equation model. There are two ways to go about this. First, we could simply do a regression with lavaan.
+Here's the student's t-test as a path model. There are two ways to go about this. First, we could simply do a regression with lavaan.
 
 ```{r}
 spiders_model <- ("
@@ -378,7 +378,19 @@ fit_spiders_model <- lavaan::sem(
 summary(fit_spiders_model)
 ```
 
-Second, we could test for measurement invariance between the two groups. Here it's less obvious since the estimates and test statistics aren't the same, but we're answering a similar question.
+You could also make a graph of this, like any other path or SEM model. And since nearly everything you have learned from PSYC 615 and 617 is just some special case of SEM, you can create graphs of all those methods too. 
+
+```{r}
+tidySEM::graph_sem(model = fit_spiders_model)
+```
+
+The second way we could go about this is to fit two multigroup intercept-only path models, then compare the fit of the two models to the data using a likelihood ratio test. In this case, one model would allow the intercepts to be freely estimated between the two groups, and the other model would constrain the intercepts to be equal between the two groups. Since the intercepts are just the group means here, if they are similar then the constrained model should have a fit similar to the free model; if they are different then the free model should fit the data better than the constrained model.
+
+Note that the values in the likelihood ratio test won't line up with the values from the t-test with this approach. However, both approaches are testing a similar question.
+
+In this example the multigroup path model is perhaps a bit silly (since you could just do a t-test), but the useful thing about this approach is that you can apply it to more complex path and SEM models and select specific paths or parts of the model to freely estimate and constrain.
+
+This approach is also used in measurement invariance testing, which involves testing whether psychometric scales measure the same latent construct across different groups of interest (see the learning more section for some links).
 
 ```{r}
 spiders_model <- ("
@@ -391,7 +403,8 @@ fit_spiders_model_free <- lavaan::sem(
   group = "group"
 )
 
-summary(fit_spiders_model_fixed)
+summary(fit_spiders_model_free)
+
 fit_spiders_model_fixed <- lavaan::sem(
   spiders_model,
   data = spiders,
@@ -399,7 +412,15 @@ fit_spiders_model_fixed <- lavaan::sem(
   group.equal = "intercepts"
 )
 
+summary(fit_spiders_model_fixed)
+
 lavaan::lavTestLRT(fit_spiders_model_free, fit_spiders_model_fixed)
+```
+
+## Wrapping up
+
+```{r}
+knitr::include_graphics(here::here("images", "sem-meme.jpg"))
 ```
 
 ## Learning more
@@ -419,6 +440,18 @@ lavaan::lavTestLRT(fit_spiders_model_free, fit_spiders_model_fixed)
 - Longitudinal Structural Equation Modeling: A Comprehensive Introduction (Newsom) <https://www.routledge.com/Longitudinal-Structural-Equation-Modeling-A-Comprehensive-Introduction/Newsom/p/book/9781848726970>
 
 Note: These books are good references even if you aren't doing longitudinal analysis
+
+### Multigroup SEM
+
+- Multigroup Analysis and Moderation with SEM (Newsom) <https://web.pdx.edu/~newsomj/semclass/ho_moderation.pdf>
+- Introduction to multigroup analysis <https://jslefche.github.io/sem_book/multigroup-analysis.html>
+- Means, Groups, and Constraints in SEM <https://psu-psychology.github.io/psy-597-SEM/10_invariance_groups/invariance_groups_constraints.html>
+- lavaan: multiple groups tutorial <https://lavaan.ugent.be/tutorial/groups.html>
+
+### Measurement Invariance
+
+- A Primer to (Cross-Cultural) Multi-Group Invariance Testing Possibilities in R <https://www.frontiersin.org/article/10.3389/fpsyg.2019.01507/full>
+- The measurement invariance chapter in the Longitudinal Structural Equation Modeling book by Newsom is also good
 
 ### Model identification
 
