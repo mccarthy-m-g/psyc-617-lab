@@ -70,7 +70,6 @@ beasts_model <- ("
 ")
 ```
 
-
 Once you have defined your model you can use the `cfa()` function (`?lavaan::cfa`) from the lavaan package to fit the model.
 
 ```{r}
