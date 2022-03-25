@@ -122,7 +122,7 @@ summary(
 
 ### Inspecting models
 
-If you need to extract any of the values in the summary for futher processing, lavaan provides a number of helper functions described here <https://lavaan.ugent.be/tutorial/inspect.html>. Some of these can also be useful for diagnostics.
+If you need to extract any of the values in the summary for further processing, lavaan provides a number of helper functions described here <https://lavaan.ugent.be/tutorial/inspect.html>. Some of these can also be useful for diagnostics.
 
 The `parameterEstimates()` function (`?lavaan::parameterEstimates`) returns a data frame containing all the model parameters in the rows.
 
