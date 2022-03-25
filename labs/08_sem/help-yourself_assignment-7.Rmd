@@ -148,7 +148,7 @@ The `fitted()` function returns the model-implied (fitted) covariance matrix (an
 fitted(fit_teaching_model)
 ```
 
-The `lavResiduals()` function (`?lavaan::lavResiduals`) returns esiduals and standardized residuals of a fitted model as well as various summaries of these residuals.
+The `lavResiduals()` function (`?lavaan::lavResiduals`) returns residuals and standardized residuals of a fitted model as well as various summaries of these residuals.
 
 ```{r}
 lavaan::lavResiduals(fit_teaching_model)
