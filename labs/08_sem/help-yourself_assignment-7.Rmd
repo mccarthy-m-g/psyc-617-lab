@@ -257,10 +257,22 @@ academics_model_layout <- tidySEM::get_layout(
   layout_algorithm = "layout_nicely"
 )
 
+# Unstandardized estimates
 tidySEM::graph_sem(
   model = fit_academics_model,
   layout = academics_model_layout
 )
+
+# If you want standardized estimates you can edit the label used for the edges
+# in the graph.
+# See: https://cjvanlissa.github.io/tidySEM/articles/Plotting_graphs.html
+fit_academics_model %>% 
+  prepare_graph(layout = academics_model_layout) %>% 
+  # Make sure to include the curly braces here, otherwise the expression will
+  # be ignored. Here we change the label to use standardized estimates with
+  # significance stars. You could also do `est_std` if you don't want stars.
+  edit_edges({label = est_sig_std}) %>% 
+  plot()
 ```
 
 As far as saving the graph, probably the least painful way would be to click the zoom button in the viewer window, adjust the window until the graph looks the way you want, then right-click and save the image. Then you can display the image in the same way we display any other image in an R Markdown document. Otherwise you can play around with knitr's figure size chunk options.
